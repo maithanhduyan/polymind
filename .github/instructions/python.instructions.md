@@ -1,5 +1,5 @@
 ---
-applyTo: '**'
+applyTo: '**/*.py'
 ---
 
 # Python Project general coding standards
@@ -38,7 +38,7 @@ applyTo: '**'
 4. **BƯỚC 4**: Không còn lỗi nữa mới được phép chạy code trong terminal
 5. **BƯỚC 5**: Monitor runtime errors và handle gracefully
 
-## Testing and Validation Patterns
+## Testing, Validation Patterns , Demo
 
 Luôn sử dụng thư mục `tests` để viết test.
 
@@ -53,7 +53,7 @@ Luôn sử dụng thư mục `tests` để viết test.
   assert result.is_valid == True
   assert len(result.errors) == 0
   ```
-
+Thử nghiệm nhỏ trong thư mục `src/sandbox` với tên file có dạng `demo_*.py`
 
 ## **Best Practices**
 - **Luôn backup trước khi refactor lớn** (sử dụng .backup directory + git backup branch)

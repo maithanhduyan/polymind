@@ -1,835 +1,1568 @@
 <!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POLYMIND - AI Agent Workspace</title>
-    
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>POLYMIND - The Global AI Chatbot</title>
+
     <!-- Import Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
     <!-- Import Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
 
-<style>
-    /* --- 1. CSS Variables & Global Styles --- */
-    :root {
-        --bg-dark: #0A0F1A;
-        --bg-panel: #121826;
-        --bg-panel-secondary: #1A2130;
-        --text-primary: #E0E0E0;
-        --text-secondary: #8A93A2;
-        --accent-primary: #007BFF;
-        --accent-primary-hover: #0056b3;
-        --accent-secondary: #2A3142;
-        --border-color: #2A3142;
-        --success-color: #28a745;
-        --font-main: 'Inter', sans-serif;
-    }
+    <style>
+      /* --- 1. CSS Variables & Global Styles --- */
+      :root {
+        /* Dark Theme (Default) */
+        --bg-dark-primary: #0f172a; /* Main background */
+        --bg-dark-secondary: #1e293b; /* Panel backgrounds (sidebar, input, header) */
+        --bg-dark-tertiary: #334155; /* Message bubbles, hover states */
+        --text-light-primary: #f8fafc;
+        --text-light-secondary: #94a3b8;
+        --accent-primary: #3b82f6; /* Main brand color */
+        --accent-primary-hover: #2563eb;
+        --border-color: #334155;
+        --success-color: #10b981; /* For capabilities */
+        --user-bubble-bg: #3b82f6; /* User message bubble */
+        --user-bubble-text: #ffffff;
 
-    * {
+        /* Light Theme (Toggleable) */
+        --light-bg-primary: #ffffff;
+        --light-bg-secondary: #f1f5f9;
+        --light-bg-tertiary: #e2e8f0;
+        --light-text-primary: #1e293b;
+        --light-text-secondary: #64748b;
+        --light-accent-primary: #3b82f6;
+        --light-accent-primary-hover: #2563eb;
+        --light-border-color: #cbd5e1;
+        --light-user-bubble-bg: #3b82f6;
+        --light-user-bubble-text: #ffffff;
+
+        /* Font & Spacing */
+        --font-main: "Inter", sans-serif;
+        --radius-sm: 4px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+        --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      /* Apply theme variables based on data-theme attribute */
+      body[data-theme="dark"] {
+        --bg-primary: var(--bg-dark-primary);
+        --bg-secondary: var(--bg-dark-secondary);
+        --bg-tertiary: var(--bg-dark-tertiary);
+        --text-primary: var(--text-light-primary);
+        --text-secondary: var(--text-light-secondary);
+        --accent-primary: var(--accent-primary);
+        --accent-primary-hover: var(--accent-primary-hover);
+        --border-color: var(--border-color);
+        --user-bubble-bg: var(--user-bubble-bg);
+        --user-bubble-text: var(--user-bubble-text);
+      }
+
+      body[data-theme="light"] {
+        --bg-primary: var(--light-bg-primary);
+        --bg-secondary: var(--light-bg-secondary);
+        --bg-tertiary: var(--light-bg-tertiary);
+        --text-primary: var(--light-text-primary);
+        --text-secondary: var(--light-text-secondary);
+        --accent-primary: var(--light-accent-primary);
+        --accent-primary-hover: var(--light-accent-primary-hover);
+        --border-color: var(--light-border-color);
+        --user-bubble-bg: var(--light-user-bubble-bg);
+        --user-bubble-text: var(--light-user-bubble-text);
+      }
+
+      * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
-    }
+      }
 
-    html, body {
+      html,
+      body {
         height: 100%;
-        overflow: hidden;
+        overflow: hidden; /* Prevent body scroll, let specific divs handle it */
         font-family: var(--font-main);
-        background-color: var(--bg-dark);
+        background-color: var(--bg-primary);
         color: var(--text-primary);
-        font-size: 16px;
-    }
+        font-size: 15px;
+        line-height: 1.5;
+        transition: background-color var(--transition), color var(--transition);
+      }
 
-    /* --- Custom Scrollbar --- */
-    ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-    }
-    ::-webkit-scrollbar-track {
-        background: var(--bg-panel);
-    }
-    ::-webkit-scrollbar-thumb {
-        background: var(--accent-secondary);
-        border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-        background: #3c455c;
-    }
+      /* --- Custom Scrollbar --- */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--text-secondary); /* Darker thumb */
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-primary); /* Lighter on hover */
+      }
 
-    /* --- 2. Main Workspace Layout (Mobile First) --- */
-    .polymind-workspace {
+      /* --- Buttons & Inputs General Styles --- */
+      button {
+        cursor: pointer;
+        border: none;
+        background: none;
+        color: var(--text-secondary);
+        padding: 8px;
+        border-radius: var(--radius-sm);
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      button:hover {
+        color: var(--text-primary);
+        background-color: var(--bg-tertiary);
+      }
+
+      /* --- 2. Main Workspace Layout (Mobile First) --- */
+      .polymind-workspace {
         display: flex;
         height: 100vh;
         width: 100vw;
         position: relative;
-    }
+      }
 
-    .sidebar {
-        width: 280px;
-        background-color: var(--bg-panel);
+      /* --- Sidebar --- */
+      .sidebar {
+        width: 260px;
+        background-color: var(--bg-secondary);
         border-right: 1px solid var(--border-color);
         display: flex;
         flex-direction: column;
-        padding: 1rem;
+        padding: 16px;
         transition: transform 0.3s ease-in-out;
         position: absolute;
         top: 0;
         left: 0;
         height: 100%;
-        z-index: 1000;
+        z-index: 100;
         transform: translateX(-100%); /* Hidden by default on mobile */
-    }
+      }
 
-    .polymind-workspace.sidebar-open .sidebar {
+      .polymind-workspace.sidebar-open .sidebar {
         transform: translateX(0);
-    }
-    
-    .sidebar-overlay {
+      }
+
+      .sidebar-overlay {
         display: none;
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.5);
-        z-index: 999;
-    }
-    
-    .polymind-workspace.sidebar-open .sidebar-overlay {
-        display: block;
-    }
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(2px);
+        z-index: 99;
+      }
 
-    .chat-interface {
+      .polymind-workspace.sidebar-open .sidebar-overlay {
+        display: block;
+      }
+
+      /* --- Chat Interface --- */
+      .chat-interface {
         flex-grow: 1;
         display: flex;
         flex-direction: column;
         height: 100%;
-        background-color: var(--bg-dark);
-    }
+        background-color: var(--bg-primary);
+      }
 
-    .context-panel {
-        display: none; /* Hidden on mobile and tablet */
-    }
+      /* --- Context Panel --- */
+      .context-panel {
+        display: none; /* Hidden by default on mobile */
+        width: 300px;
+        background-color: var(--bg-secondary);
+        border-left: 1px solid var(--border-color);
+        padding: 20px;
+        flex-direction: column;
+      }
 
-    /* --- 3. Sidebar Components --- */
-    .sidebar-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: 1.5rem;
-    }
-    .sidebar-header .logo {
-        font-size: 1.5rem;
-        font-weight: 700;
-        letter-spacing: 1px;
-    }
-    .sidebar-header .logo i {
-        color: var(--accent-primary);
-        margin-right: 0.5rem;
-    }
-
-    .new-chat-btn {
-        width: 100%;
-        padding: 0.75rem;
-        background-color: var(--accent-primary);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        font-size: 1rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background-color 0.2s;
-        margin-bottom: 1.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .new-chat-btn i {
-        margin-right: 0.5rem;
-    }
-    .new-chat-btn:hover {
-        background-color: var(--accent-primary-hover);
-    }
-
-    .sidebar-section {
-        margin-bottom: 1.5rem;
-    }
-    .sidebar-section-title {
-        font-size: 0.8rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        color: var(--text-secondary);
-        padding: 0 0.5rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .nav-list {
-        list-style: none;
-        max-height: 25vh;
-        overflow-y: auto;
-    }
-    .nav-list li a {
-        display: flex;
-        align-items: center;
-        padding: 0.6rem 0.75rem;
-        color: var(--text-primary);
-        text-decoration: none;
-        border-radius: 6px;
-        transition: background-color 0.2s, color 0.2s;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .nav-list li a:hover {
-        background-color: var(--accent-secondary);
-    }
-    .nav-list li a.active {
-        background-color: var(--accent-primary);
-        color: white;
-    }
-    .nav-list li a i {
-        margin-right: 0.75rem;
-        width: 20px;
-        text-align: center;
-        color: var(--text-secondary);
-    }
-    .nav-list li a.active i {
-        color: white;
-    }
-
-    .sidebar-footer {
-        margin-top: auto;
-        border-top: 1px solid var(--border-color);
-        padding-top: 1rem;
-    }
-    .user-profile {
-        display: flex;
-        align-items: center;
-        padding: 0.5rem;
-        border-radius: 6px;
-        transition: background-color 0.2s;
-    }
-    .user-profile:hover {
-        background-color: var(--accent-secondary);
-    }
-    .user-profile img {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        margin-right: 0.75rem;
-    }
-    .user-info .name {
-        font-weight: 600;
-    }
-    .user-info .role {
-        font-size: 0.8rem;
-        color: var(--text-secondary);
-    }
-
-    /* --- 4. Chat Interface Components --- */
-    .chat-header {
+      /* --- 3. Sidebar Components --- */
+      .sidebar-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 1rem;
-        border-bottom: 1px solid var(--border-color);
-        background-color: var(--bg-panel);
-    }
-    .chat-header-title {
+        margin-bottom: 24px;
+        padding: 8px 0;
+      }
+
+      .sidebar-header .logo {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
         display: flex;
         align-items: center;
-        font-size: 1.1rem;
-        font-weight: 600;
-    }
-    .chat-header-title i {
-        margin-right: 0.75rem;
-        color: var(--accent-primary);
-    }
-
-    .mobile-menu-toggle {
-        display: block;
-        background: none;
-        border: none;
-        color: var(--text-secondary);
-        font-size: 1.5rem;
-        cursor: pointer;
-        padding: 0.5rem;
-        margin-right: 0.5rem;
-    }
-    
-    .chat-header-actions button {
-        background: none;
-        border: none;
-        color: var(--text-secondary);
-        font-size: 1.2rem;
-        margin-left: 1rem;
-        cursor: pointer;
-        transition: color 0.2s;
-    }
-    .chat-header-actions button:hover {
+        gap: 8px;
         color: var(--text-primary);
-    }
+      }
 
-    .chat-log {
+      .sidebar-header .logo i {
+        color: var(--accent-primary);
+      }
+
+      .sidebar-header .close-sidebar-btn {
+        display: block; /* Show on mobile */
+        color: var(--text-secondary);
+        font-size: 20px;
+        padding: 4px;
+      }
+
+      .new-chat-btn {
+        width: 100%;
+        padding: 10px 16px;
+        background-color: var(--accent-primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: var(--transition);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .new-chat-btn:hover {
+        background-color: var(--accent-primary-hover);
+        box-shadow: var(--shadow-sm);
+      }
+
+      .sidebar-section {
+        margin-bottom: 20px;
+      }
+
+      .sidebar-section-title {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        padding: 8px 0;
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+      }
+
+      .nav-list {
+        list-style: none;
+        max-height: 25vh; /* Limit height for scroll */
+        overflow-y: auto;
+        margin-bottom: 8px; /* Spacing between lists if multiple */
+      }
+
+      .nav-list li a {
+        display: flex;
+        align-items: center;
+        padding: 10px 12px;
+        color: var(--text-primary);
+        text-decoration: none;
+        border-radius: var(--radius-sm);
+        transition: var(--transition);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 14px;
+        gap: 12px;
+      }
+
+      .nav-list li a:hover {
+        background-color: var(--bg-tertiary);
+      }
+
+      .nav-list li a.active {
+        background-color: var(--accent-primary);
+        color: white;
+      }
+
+      .nav-list li a i {
+        color: var(--text-secondary); /* Default icon color */
+        width: 18px;
+        text-align: center;
+      }
+
+      .nav-list li a.active i {
+        color: white; /* Active icon color */
+      }
+
+      .sidebar-footer {
+        margin-top: auto; /* Push to bottom */
+        border-top: 1px solid var(--border-color);
+        padding-top: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .user-profile {
+        display: flex;
+        align-items: center;
+        padding: 8px;
+        border-radius: var(--radius-sm);
+        transition: var(--transition);
+        gap: 12px;
+      }
+
+      .user-profile:hover {
+        background-color: var(--bg-tertiary);
+      }
+
+      .user-profile img {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .user-info {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .user-info .name {
+        font-weight: 500;
+        font-size: 14px;
+      }
+
+      .user-info .role {
+        font-size: 12px;
+        color: var(--text-secondary);
+      }
+
+      .global-settings {
+        display: flex;
+        gap: 8px;
+      }
+
+      .global-settings button {
+        flex-grow: 1;
+        padding: 10px 12px;
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: var(--text-primary);
+        background-color: var(--bg-tertiary);
+        border-radius: var(--radius-md);
+      }
+      .global-settings button:hover {
+        background-color: var(--accent-primary);
+        color: white;
+      }
+      .global-settings button:hover i {
+        color: white;
+      }
+      .global-settings button i {
+        color: var(--text-secondary);
+        transition: var(--transition);
+      }
+
+      /* --- 4. Chat Interface Components --- */
+      .chat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px;
+        border-bottom: 1px solid var(--border-color);
+        background-color: var(--bg-secondary);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+
+      .chat-header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .chat-header-title {
+        display: flex;
+        align-items: center;
+        font-size: 15px;
+        font-weight: 500;
+        gap: 12px;
+      }
+
+      .chat-header-title i {
+        color: var(--accent-primary);
+      }
+
+      .mobile-menu-toggle {
+        display: block; /* Show on mobile */
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 18px;
+        cursor: pointer;
+        padding: 8px;
+        transition: var(--transition);
+      }
+
+      .mobile-menu-toggle:hover {
+        color: var(--text-primary);
+      }
+
+      .chat-header-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .chat-log {
         flex-grow: 1;
         overflow-y: auto;
-        padding: 1.5rem;
-    }
-    
-    .chat-message {
+        padding: 20px;
         display: flex;
-        margin-bottom: 1.5rem;
-        max-width: 85%;
-        animation: fadeIn 0.5s ease-in-out;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+        flex-direction: column;
+        gap: 20px;
+      }
 
-    .chat-message .avatar {
-        width: 40px;
-        height: 40px;
+      .chat-message {
+        display: flex;
+        gap: 12px;
+        max-width: 90%;
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .chat-message .avatar {
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: 600;
-        margin-right: 1rem;
+        font-weight: 500;
         flex-shrink: 0;
-    }
-    .chat-message.user .avatar {
-        background-color: var(--accent-secondary);
-    }
-    .chat-message.ai .avatar {
-        background-color: var(--accent-primary);
         color: white;
-    }
-    
-    .message-content {
-        background-color: var(--bg-panel-secondary);
-        padding: 0.8rem 1rem;
-        border-radius: 12px;
+        font-size: 14px;
+      }
+
+      .chat-message.user .avatar {
+        background-color: var(--bg-tertiary);
+        color: var(--text-primary);
+      }
+
+      .chat-message.ai .avatar {
+        background-color: var(--accent-primary);
+      }
+
+      .message-content {
+        background-color: var(--bg-tertiary);
+        padding: 12px 16px;
+        border-radius: var(--radius-md);
         display: flex;
         flex-direction: column;
-    }
-    .message-content p {
-        line-height: 1.6;
-        white-space: pre-wrap;
-    }
-    .message-meta {
-        font-size: 0.75rem;
+        gap: 4px;
+        max-width: 100%; /* Ensure content doesn't overflow */
+      }
+
+      .message-content p {
+        white-space: pre-wrap; /* Preserve formatting */
+        word-break: break-word; /* Break long words */
+      }
+
+      .message-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+        font-size: 12px;
+      }
+      .message-actions button {
+        font-size: 12px;
+        padding: 4px 8px;
         color: var(--text-secondary);
-        margin-top: 0.5rem;
-        align-self: flex-start;
-    }
-    
-    .chat-message.user {
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        background-color: transparent;
+      }
+      .message-actions button:hover {
+        background-color: var(--accent-primary);
+        color: white;
+        border-color: var(--accent-primary);
+      }
+
+      .message-meta {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-top: 4px;
+      }
+
+      .chat-message.user {
         align-self: flex-end;
         flex-direction: row-reverse;
-    }
-    .chat-message.user .avatar {
-        margin-right: 0;
-        margin-left: 1rem;
-    }
-    .chat-message.user .message-content {
-        background-color: var(--accent-primary);
-    }
-    .chat-message.user .message-content p,
-    .chat-message.user .message-meta {
-        color: white;
-    }
-    
-    .typing-indicator {
+      }
+
+      .chat-message.user .message-content {
+        background-color: var(--user-bubble-bg);
+        color: var(--user-bubble-text);
+      }
+
+      .chat-message.user .message-meta {
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .typing-indicator {
         display: flex;
         align-items: center;
-        padding: 0.8rem 1rem;
-    }
-    .typing-indicator span {
-        height: 8px;
-        width: 8px;
+        padding: 12px 16px;
+        gap: 8px;
+      }
+
+      .typing-indicator span {
+        height: 6px;
+        width: 6px;
         background-color: var(--text-secondary);
         border-radius: 50%;
         display: inline-block;
-        margin: 0 2px;
         animation: bounce 1.4s infinite ease-in-out both;
-    }
-    .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-    .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
-    @keyframes bounce {
-      0%, 80%, 100% { transform: scale(0); }
-      40% { transform: scale(1.0); }
-    }
+      }
 
-    .chat-input-area {
-        padding: 1rem;
+      .typing-indicator span:nth-child(1) {
+        animation-delay: -0.32s;
+      }
+      .typing-indicator span:nth-child(2) {
+        animation-delay: -0.16s;
+      }
+
+      @keyframes bounce {
+        0%,
+        80%,
+        100% {
+          transform: scale(0);
+        }
+        40% {
+          transform: scale(1);
+        }
+      }
+
+      .chat-input-area {
+        padding: 16px;
         border-top: 1px solid var(--border-color);
-        background-color: var(--bg-panel);
-    }
-    .chat-input-form {
+        background-color: var(--bg-secondary);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        position: sticky;
+        bottom: 0;
+        z-index: 50;
+      }
+
+      .quick-reply-suggestions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .quick-reply-suggestions button {
+        padding: 8px 12px;
+        border-radius: var(--radius-md);
+        background-color: var(--bg-tertiary);
+        color: var(--text-primary);
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+      .quick-reply-suggestions button:hover {
+        background-color: var(--accent-primary);
+        color: white;
+      }
+
+      .chat-input-form {
         display: flex;
         align-items: flex-end;
-        background-color: var(--bg-panel-secondary);
-        border-radius: 12px;
-        padding: 0.5rem;
+        background-color: var(--bg-tertiary);
+        border-radius: var(--radius-md);
+        padding: 8px;
         border: 1px solid var(--border-color);
-        transition: border-color 0.2s;
-    }
-    .chat-input-form:focus-within {
+        transition: var(--transition);
+      }
+
+      .chat-input-form:focus-within {
         border-color: var(--accent-primary);
-    }
-    
-    .chat-input-form textarea {
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+      }
+
+      .chat-input-form textarea {
         flex-grow: 1;
         border: none;
         background: none;
         color: var(--text-primary);
-        font-size: 1rem;
+        font-size: 14px;
         resize: none;
-        max-height: 200px;
+        max-height: 150px;
         line-height: 1.5;
-        padding: 0.5rem;
+        padding: 8px;
         font-family: var(--font-main);
         outline: none;
-    }
-    .chat-input-form textarea::placeholder {
-        color: var(--text-secondary);
-    }
-    
-    .input-actions button {
-        background: none;
-        border: none;
-        color: var(--text-secondary);
-        font-size: 1.25rem;
-        cursor: pointer;
-        padding: 0.6rem;
-        border-radius: 8px;
-        transition: color 0.2s, background-color 0.2s;
-    }
-    .input-actions button:hover {
-        color: var(--text-primary);
-        background-color: var(--accent-secondary);
-    }
-    .send-btn {
-        background-color: var(--accent-primary);
-        color: white !important;
-    }
-    .send-btn:hover {
-        background-color: var(--accent-primary-hover) !important;
-    }
+        min-height: 24px;
+      }
 
-    /* --- 5. Context Panel (Desktop) --- */
-    .context-panel {
-        width: 320px;
-        background-color: var(--bg-panel);
-        border-left: 1px solid var(--border-color);
-        padding: 1.5rem;
-        display: none; /* Initially hidden */
-        flex-direction: column;
-    }
-    .context-header {
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin-bottom: 1.5rem;
+      .chat-input-form textarea::placeholder {
+        color: var(--text-secondary);
+      }
+
+      .input-actions {
+        display: flex;
+        gap: 4px;
+        align-items: flex-end;
+      }
+
+      .input-actions button {
+        padding: 8px;
+      }
+
+      .send-btn {
+        background-color: var(--accent-primary) !important;
+        color: white !important;
+      }
+
+      .send-btn:hover {
+        background-color: var(--accent-primary-hover) !important;
+      }
+
+      .quick-tip {
+        font-size: 12px;
+        color: var(--text-secondary);
+        text-align: center;
+        margin-top: -8px; /* Pull it closer to input */
+      }
+
+      /* --- 5. Context Panel (Desktop) --- */
+      .context-header {
+        font-size: 15px;
+        font-weight: 500;
+        margin-bottom: 20px;
         display: flex;
         align-items: center;
-    }
-    .context-header i {
-        margin-right: 0.75rem;
-        color: var(--text-secondary);
-    }
-    .context-content .placeholder {
+        gap: 12px;
+        color: var(--text-primary);
+      }
+
+      .context-header i {
+        color: var(--accent-primary);
+      }
+
+      .context-content .placeholder {
         text-align: center;
         color: var(--text-secondary);
-        padding: 2rem;
-    }
-    .agent-details .detail-item {
-        margin-bottom: 1rem;
-    }
-    .agent-details .detail-item strong {
-        display: block;
+        padding: 40px 0;
+        font-size: 14px;
+      }
+
+      .agent-details {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .agent-details .detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .agent-details .detail-item strong {
         color: var(--text-secondary);
-        font-size: 0.8rem;
-        margin-bottom: 0.25rem;
-    }
-    .agent-details .detail-item p {
-        background-color: var(--bg-panel-secondary);
-        padding: 0.5rem 0.75rem;
-        border-radius: 6px;
-    }
-    .agent-details .capabilities-list {
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .agent-details .detail-item p {
+        background-color: var(--bg-tertiary);
+        padding: 12px;
+        border-radius: var(--radius-md);
+        font-size: 14px;
+      }
+
+      .agent-details .capabilities-list {
         list-style: none;
-        padding: 0;
-    }
-    .agent-details .capabilities-list li {
-        background-color: var(--bg-panel-secondary);
-        padding: 0.5rem 0.75rem;
-        border-radius: 6px;
-        margin-bottom: 0.5rem;
-        font-size: 0.9rem;
-    }
-    .agent-details .capabilities-list li i {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .agent-details .capabilities-list li {
+        background-color: var(--bg-tertiary);
+        padding: 12px;
+        border-radius: var(--radius-md);
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .agent-details .capabilities-list li i {
         color: var(--success-color);
-        margin-right: 0.5rem;
-    }
-    
+      }
 
-    /* --- 6. Responsive Breakpoints --- */
+      /* --- Welcome Carousel (Initial Load) --- */
+      .welcome-carousel {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--bg-primary);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 200; /* Above everything */
+        transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        opacity: 1;
+        transform: translateY(0);
+      }
 
-    /* Tablet and larger */
-    @media (min-width: 768px) {
+      .welcome-carousel.hidden {
+        opacity: 0;
+        transform: translateY(-100%);
+        pointer-events: none;
+      }
+
+      .carousel-content {
+        text-align: center;
+        max-width: 500px;
+        margin-bottom: 40px;
+      }
+
+      .carousel-content i {
+        font-size: 60px;
+        color: var(--accent-primary);
+        margin-bottom: 20px;
+      }
+
+      .carousel-content h2 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 15px;
+        color: var(--text-primary);
+      }
+
+      .carousel-content p {
+        font-size: 16px;
+        color: var(--text-secondary);
+        line-height: 1.6;
+      }
+
+      .carousel-pagination {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 30px;
+      }
+      .carousel-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: var(--text-secondary);
+        opacity: 0.5;
+        transition: var(--transition);
+        cursor: pointer;
+      }
+      .carousel-dot.active {
+        background-color: var(--accent-primary);
+        opacity: 1;
+        width: 25px;
+        border-radius: var(--radius-md);
+      }
+
+      .start-chat-btn {
+        padding: 14px 28px;
+        background-color: var(--accent-primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius-lg);
+        font-size: 16px;
+        font-weight: 600;
+        transition: var(--transition);
+      }
+      .start-chat-btn:hover {
+        background-color: var(--accent-primary-hover);
+        box-shadow: var(--shadow-md);
+      }
+
+      /* --- 6. Responsive Breakpoints --- */
+      /* Tablet and larger */
+      @media (min-width: 768px) {
         .sidebar {
-            position: static;
-            transform: translateX(0);
+          position: static;
+          transform: translateX(0);
         }
+
         .mobile-menu-toggle {
-            display: none;
+          display: none;
         }
-        .chat-header-title {
-            margin-left: 0;
+
+        .sidebar-header .close-sidebar-btn {
+          display: none; /* Hide on larger screens */
         }
+
         .polymind-workspace.sidebar-open .sidebar-overlay {
-            display: none;
+          display: none;
         }
-    }
 
-    /* Desktop and larger */
-    @media (min-width: 1200px) {
-        .polymind-workspace {
-            display: grid;
-            grid-template-columns: 280px 1fr 320px;
-        }
-        .context-panel {
-            display: flex;
-        }
         .chat-message {
-            max-width: 75%;
+          max-width: 80%;
         }
-    }
+      }
 
-</style>
-</head>
-<body>
+      /* Desktop and larger */
+      @media (min-width: 1200px) {
+        .polymind-workspace {
+          display: grid;
+          grid-template-columns: 260px 1fr 300px; /* Sidebar, Chat, Context Panel */
+        }
 
-<div class="polymind-workspace" id="polymind-workspace">
-    
-    <!-- Sidebar Overlay for Mobile -->
-    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+        .context-panel {
+          display: flex; /* Show on desktop */
+        }
 
-    <!-- ===== 1. SIDEBAR ===== -->
-    <aside class="sidebar">
+        .chat-message {
+          max-width: 70%; /* Give more space for chat */
+        }
+      }
+    </style>
+  </head>
+  <body data-theme="dark">
+    <!-- Welcome Carousel (Initial Onboarding) -->
+    <div class="welcome-carousel" id="welcome-carousel">
+      <div class="carousel-content">
+        <i class="fas fa-brain"></i>
+        <h2>Welcome to POLYMIND</h2>
+        <p>
+          Your intelligent AI assistant, ready to revolutionize the way you
+          work. Fast, smart, and secure.
+        </p>
+      </div>
+      <div class="carousel-pagination">
+        <span class="carousel-dot active" data-slide="0"></span>
+        <span class="carousel-dot" data-slide="1"></span>
+        <span class="carousel-dot" data-slide="2"></span>
+      </div>
+      <button class="start-chat-btn" id="start-chat-btn">
+        Start Chatting Now
+      </button>
+    </div>
+
+    <div class="polymind-workspace" id="polymind-workspace">
+      <!-- Sidebar Overlay for Mobile -->
+      <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+      <!-- ===== 1. SIDEBAR ===== -->
+      <aside class="sidebar">
         <header class="sidebar-header">
-            <span class="logo"><i class="fas fa-brain"></i>POLYMIND</span>
+          <span class="logo"><i class="fas fa-brain"></i>POLYMIND</span>
+          <button
+            class="close-sidebar-btn"
+            id="close-sidebar-btn"
+            title="Close Sidebar"
+          >
+            <i class="fas fa-times"></i>
+          </button>
         </header>
 
         <button class="new-chat-btn">
-            <i class="fas fa-plus"></i> Bắt đầu hội thoại
+          <i class="fas fa-plus"></i> New Chat
         </button>
 
         <div class="sidebar-section">
-            <h3 class="sidebar-section-title">Hội thoại</h3>
-            <ul class="nav-list">
-                <li><a href="#" class="active"><i class="fas fa-comments"></i> Phân tích Báo cáo X-25</a></li>
-                <li><a href="#"><i class="fas fa-comments"></i> Lên kế hoạch Logistics</a></li>
-                <li><a href="#"><i class="fas fa-comments"></i> Dịch thuật tài liệu</a></li>
-            </ul>
-        </div>
-        
-        <div class="sidebar-section">
-            <h3 class="sidebar-section-title">AI Agents</h3>
-            <ul class="nav-list" id="agent-list">
-                <li><a href="#" data-agent="Strategos"><i class="fas fa-chess-king"></i> Strategos (Chiến lược)</a></li>
-                <li><a href="#" data-agent="Analytica"><i class="fas fa-chart-pie"></i> Analytica (Phân tích)</a></li>
-                <li><a href="#" data-agent="Logistix"><i class="fas fa-truck"></i> Logistix (Hậu cần)</a></li>
-                <li><a href="#" data-agent="Linguist"><i class="fas fa-language"></i> Linguist (Ngôn ngữ)</a></li>
-            </ul>
+          <h3 class="sidebar-section-title">Conversations</h3>
+          <ul class="nav-list" id="conversation-list">
+            <li>
+              <a href="#" class="active" data-conv-id="1"
+                ><i class="fas fa-comment"></i> X-25 Report Analysis</a
+              >
+            </li>
+            <li>
+              <a href="#" data-conv-id="2"
+                ><i class="fas fa-comment"></i> Logistics Planning</a
+              >
+            </li>
+            <li>
+              <a href="#" data-conv-id="3"
+                ><i class="fas fa-comment"></i> Document Translation</a
+              >
+            </li>
+          </ul>
         </div>
 
         <div class="sidebar-section">
-            <h3 class="sidebar-section-title">Kho tri thức</h3>
-            <ul class="nav-list">
-                <li><a href="#"><i class="fas fa-file-pdf"></i> Report_X-25.pdf</a></li>
-                <li><a href="#"><i class="fas fa-file-word"></i> Supply_Chain_Analysis.docx</a></li>
-                <li><a href="#"><i class="fas fa-database"></i> Personnel_Database.sql</a></li>
-            </ul>
+          <h3 class="sidebar-section-title">AI Agents</h3>
+          <ul class="nav-list" id="agent-list">
+            <li>
+              <a href="#" data-agent="Strategos"
+                ><i class="fas fa-chess-king"></i> Strategos</a
+              >
+            </li>
+            <li>
+              <a href="#" data-agent="Analytica"
+                ><i class="fas fa-chart-pie"></i> Analytica</a
+              >
+            </li>
+            <li>
+              <a href="#" data-agent="Logistix"
+                ><i class="fas fa-truck"></i> Logistix</a
+              >
+            </li>
+            <li>
+              <a href="#" data-agent="Linguist"
+                ><i class="fas fa-language"></i> Linguist</a
+              >
+            </li>
+          </ul>
+        </div>
+
+        <div class="sidebar-section">
+          <h3 class="sidebar-section-title">Knowledge Base</h3>
+          <ul class="nav-list" id="knowledge-base-list">
+            <li>
+              <a href="#"><i class="fas fa-file-alt"></i> Report_X-25.pdf</a>
+            </li>
+            <li>
+              <a href="#"><i class="fas fa-file-word"></i> Supply_Chain.docx</a>
+            </li>
+            <li>
+              <a href="#"><i class="fas fa-database"></i> Personnel_DB.sql</a>
+            </li>
+          </ul>
         </div>
 
         <footer class="sidebar-footer">
-            <div class="user-profile">
-                <img src="https://i.pravatar.cc/80?u=commander" alt="User Avatar">
-                <div class="user-info">
-                    <span class="name">Chỉ huy Bravo</span>
-                    <span class="role">Quản trị viên</span>
-                </div>
+          <div class="user-profile">
+            <img src="https://i.pravatar.cc/80?u=commander" alt="User Avatar" />
+            <div class="user-info">
+              <span class="name">Commander Bravo</span>
+              <span class="role">Administrator</span>
             </div>
+          </div>
+          <div class="global-settings">
+            <button title="Change Language">
+              <i class="fas fa-globe"></i> EN
+            </button>
+            <button title="Help & Support">
+              <i class="fas fa-question-circle"></i> Help
+            </button>
+            <button title="Settings" id="theme-toggle">
+              <i class="fas fa-cog"></i> Settings
+            </button>
+          </div>
         </footer>
-    </aside>
+      </aside>
 
-    <!-- ===== 2. CHAT INTERFACE ===== -->
-    <main class="chat-interface">
+      <!-- ===== 2. CHAT INTERFACE ===== -->
+      <main class="chat-interface">
         <header class="chat-header">
-            <button class="mobile-menu-toggle" id="mobile-menu-toggle">
-                <i class="fas fa-bars"></i>
+          <div class="chat-header-left">
+            <button
+              class="mobile-menu-toggle"
+              id="mobile-menu-toggle"
+              title="Open Sidebar"
+            >
+              <i class="fas fa-bars"></i>
             </button>
             <div class="chat-header-title" id="chat-header-title">
-                <i class="fas fa-chess-king"></i>
-                <span>Đang trò chuyện với Strategos</span>
+              <i class="fas fa-chess-king"></i>
+              <span>Chat with Strategos</span>
             </div>
-            <div class="chat-header-actions">
-                <button title="Thông tin Agent"><i class="fas fa-info-circle"></i></button>
-                <button title="Xuất hội thoại"><i class="fas fa-download"></i></button>
-                <button title="Xóa hội thoại"><i class="fas fa-trash-alt"></i></button>
-            </div>
+          </div>
+          <div class="chat-header-actions">
+            <button title="Agent Info">
+              <i class="fas fa-info-circle"></i>
+            </button>
+            <button title="Export Chat"><i class="fas fa-download"></i></button>
+            <button title="Clear Chat"><i class="fas fa-trash-alt"></i></button>
+          </div>
         </header>
 
         <div class="chat-log" id="chat-log">
-            <!-- AI Welcome Message -->
-            <div class="chat-message ai">
-                <div class="avatar"><i class="fas fa-robot"></i></div>
-                <div class="message-content">
-                    <p>Agent Strategos sẵn sàng nhận lệnh. Tôi có thể giúp gì cho chiến dịch của bạn?</p>
-                    <span class="message-meta">Strategos • Vừa xong</span>
-                </div>
+          <!-- AI Welcome Message -->
+          <div class="chat-message ai">
+            <div class="avatar"><i class="fas fa-robot"></i></div>
+            <div class="message-content">
+              <p>
+                Strategos ready for commands. How can I assist with your
+                mission?
+              </p>
+              <span class="message-meta">Strategos • Just now</span>
             </div>
+          </div>
 
-            <!-- User Message Example -->
-            <div class="chat-message user">
-                <div class="avatar">CB</div>
-                <div class="message-content">
-                    <p>Phân tích các điểm yếu và điểm mạnh chính trong Báo cáo X-25. Đề xuất 3 hướng hành động chiến lược.</p>
-                    <span class="message-meta">Chỉ huy Bravo • 10:32</span>
-                </div>
+          <!-- User Message Example -->
+          <div class="chat-message user">
+            <div class="avatar">CB</div>
+            <div class="message-content">
+              <p>
+                Analyze key strengths and weaknesses in X-25 Report. Propose 3
+                strategic action plans.
+              </p>
+              <div class="message-actions">
+                <button><i class="fas fa-thumbs-up"></i></button>
+                <button><i class="fas fa-thumbs-down"></i></button>
+                <button>Revise</button>
+              </div>
+              <span class="message-meta">Commander Bravo • 10:32</span>
             </div>
-             <!-- AI Typing Indicator (Template) -->
-            <div class="chat-message ai typing-indicator" id="typing-indicator" style="display: none;">
-                <div class="avatar"><i class="fas fa-robot"></i></div>
-                 <div class="message-content">
-                    <div class="typing-indicator"><span></span><span></span><span></span></div>
-                 </div>
-            </div>
+          </div>
 
+          <!-- AI Typing Indicator (Template) -->
+          <div
+            class="chat-message ai typing-indicator"
+            id="typing-indicator"
+            style="display: none"
+          >
+            <div class="avatar"><i class="fas fa-robot"></i></div>
+            <div class="message-content">
+              <div class="typing-indicator">
+                <span></span><span></span><span></span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="chat-input-area">
-             <form class="chat-input-form" id="chat-form">
-                <textarea id="chat-input" placeholder="Nhập yêu cầu... (Shift + Enter để xuống dòng)" rows="1"></textarea>
-                <div class="input-actions">
-                    <button type="button" title="Đính kèm tài liệu"><i class="fas fa-paperclip"></i></button>
-                    <button type="submit" class="send-btn" title="Gửi (Enter)"><i class="fas fa-paper-plane"></i></button>
-                </div>
-            </form>
+          <div class="quick-reply-suggestions" id="quick-reply-suggestions">
+            <button>What are my top priorities?</button>
+            <button>Summarize recent intel.</button>
+            <button>Propose next steps.</button>
+          </div>
+          <form class="chat-input-form" id="chat-form">
+            <button type="button" title="Voice Input">
+              <i class="fas fa-microphone"></i>
+            </button>
+            <textarea
+              id="chat-input"
+              placeholder="You need help today?"
+              rows="1"
+            ></textarea>
+            <div class="input-actions">
+              <button type="button" title="Attach File">
+                <i class="fas fa-paperclip"></i>
+              </button>
+              <button type="button" title="Emoji">
+                <i class="fas fa-smile"></i>
+              </button>
+              <button type="submit" class="send-btn" title="Send (Enter)">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </div>
+          </form>
+          <div class="quick-tip">
+            Quick Tip: Type <kbd>@</kbd> to call a command or <kbd>/</kbd> to
+            see command list.
+          </div>
         </div>
-    </main>
+      </main>
 
-    <!-- ===== 3. CONTEXT PANEL ===== -->
-    <aside class="context-panel" id="context-panel">
+      <!-- ===== 3. CONTEXT PANEL ===== -->
+      <aside class="context-panel" id="context-panel">
         <header class="context-header">
-            <i class="fas fa-info-circle"></i> <span>Thông tin Agent</span>
+          <i class="fas fa-info-circle"></i> <span>Agent Information</span>
         </header>
         <div class="context-content" id="context-content">
-            <!-- Content will be dynamically inserted here by JS -->
+          <!-- Content will be dynamically inserted here by JS -->
         </div>
-    </aside>
-</div>
+      </aside>
+    </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // --- DOM Elements ---
+        const chatLog = document.getElementById("chat-log");
+        const chatForm = document.getElementById("chat-form");
+        const chatInput = document.getElementById("chat-input");
+        const typingIndicator = document.getElementById("typing-indicator");
+        const mobileMenuToggle = document.getElementById("mobile-menu-toggle");
+        const closeSidebarBtn = document.getElementById("close-sidebar-btn");
+        const workspace = document.getElementById("polymind-workspace");
+        const sidebarOverlay = document.getElementById("sidebar-overlay");
+        const agentLinks = document.querySelectorAll("#agent-list a");
+        const conversationLinks = document.querySelectorAll(
+          "#conversation-list a"
+        ); // New
+        const chatHeaderTitleSpan = document
+          .getElementById("chat-header-title")
+          .querySelector("span");
+        const chatHeaderIcon = document
+          .getElementById("chat-header-title")
+          .querySelector("i");
+        const contextPanel = document.getElementById("context-panel");
+        const contextContent = document.getElementById("context-content");
+        const quickReplySuggestions = document.getElementById(
+          "quick-reply-suggestions"
+        );
+        const themeToggleBtn = document.getElementById("theme-toggle");
 
-    // --- DOM Elements ---
-    const chatLog = document.getElementById('chat-log');
-    const chatForm = document.getElementById('chat-form');
-    const chatInput = document.getElementById('chat-input');
-    const typingIndicator = document.getElementById('typing-indicator');
-    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
-    const workspace = document.getElementById('polymind-workspace');
-    const sidebarOverlay = document.getElementById('sidebar-overlay');
-    const agentLinks = document.querySelectorAll('#agent-list a');
-    const chatHeaderTitle = document.getElementById('chat-header-title').querySelector('span');
-    const chatHeaderIcon = document.getElementById('chat-header-title').querySelector('i');
-    const contextPanel = document.getElementById('context-panel');
-    const contextContent = document.getElementById('context-content');
+        const welcomeCarousel = document.getElementById("welcome-carousel");
+        const startChatBtn = document.getElementById("start-chat-btn");
+        const carouselDots = document.querySelectorAll(".carousel-dot");
 
-    // --- Agent Information Database ---
-    const agentDatabase = {
-        'Strategos': {
-            icon: 'fa-chess-king',
-            description: 'AI chuyên về hoạch định chiến lược, phân tích tình báo và mô phỏng kịch bản. Tối ưu cho các quyết định cấp cao.',
-            capabilities: ['Phân tích SWOT', 'Mô phỏng đối kháng', 'Hoạch định chiến dịch', 'Quản lý rủi ro']
-        },
-        'Analytica': {
-            icon: 'fa-chart-pie',
-            description: 'AI tập trung vào phân tích dữ liệu lớn, nhận dạng mẫu và trực quan hóa thông tin phức tạp.',
-            capabilities: ['Xử lý dữ liệu lớn', 'Thống kê dự báo', 'Nhận dạng thực thể', 'Trực quan hóa dữ liệu']
-        },
-        'Logistix': {
-            icon: 'fa-truck',
-            description: 'AI quản lý và tối ưu hóa chuỗi cung ứng, điều phối nguồn lực và lập kế hoạch hậu cần.',
-            capabilities: ['Tối ưu tuyến đường', 'Quản lý kho vận', 'Dự báo nhu cầu', 'Điều phối tài sản']
-        },
-        'Linguist': {
-            icon: 'fa-language',
-            description: 'AI chuyên về dịch thuật, xử lý ngôn ngữ tự nhiên và phân tích văn bản đa ngôn ngữ trong thời gian thực.',
-            capabilities: ['Dịch thuật cấp độ quân sự', 'Tóm tắt văn bản', 'Phân tích tình cảm', 'Giao tiếp đa ngôn ngữ']
-        }
-    };
-    
-    // --- State ---
-    let currentAgent = 'Strategos';
+        // --- Agent Information Database ---
+        const agentDatabase = {
+          Strategos: {
+            icon: "fa-chess-king",
+            description:
+              "Specialized in strategic planning, intelligence analysis, and scenario simulation. Optimized for high-level decision making.",
+            capabilities: [
+              "SWOT Analysis",
+              "Scenario Simulation",
+              "Campaign Planning",
+              "Risk Management",
+            ],
+            quickReplies: [
+              "What are my top priorities?",
+              "Summarize recent intel.",
+              "Propose next steps.",
+            ],
+          },
+          Analytica: {
+            icon: "fa-chart-pie",
+            description:
+              "Focused on big data analysis, pattern recognition, and complex information visualization.",
+            capabilities: [
+              "Big Data Processing",
+              "Predictive Analytics",
+              "Entity Recognition",
+              "Data Visualization",
+            ],
+            quickReplies: [
+              "Show me data trends.",
+              "Analyze this dataset.",
+              "Identify key outliers.",
+            ],
+          },
+          Logistix: {
+            icon: "fa-truck",
+            description:
+              "Manages and optimizes supply chains, resource coordination, and logistics planning.",
+            capabilities: [
+              "Route Optimization",
+              "Inventory Management",
+              "Demand Forecasting",
+              "Asset Coordination",
+            ],
+            quickReplies: [
+              "Optimize delivery routes.",
+              "Check inventory levels.",
+              "Forecast demand for Q3.",
+            ],
+          },
+          Linguist: {
+            icon: "fa-language",
+            description:
+              "Specializes in translation, natural language processing, and multilingual text analysis in real-time.",
+            capabilities: [
+              "Military-grade Translation",
+              "Text Summarization",
+              "Sentiment Analysis",
+              "Multilingual Communication",
+            ],
+            quickReplies: [
+              "Translate this text.",
+              "Summarize this document.",
+              "Analyze sentiment here.",
+            ],
+          },
+        };
 
-    // --- Functions ---
-    
-    /**
-     * Appends a message to the chat log and scrolls down.
-     * @param {string} sender - 'user' or 'ai'
-     * @param {string} text - The message content
-     */
-    const addMessage = (sender, text) => {
-        const messageEl = document.createElement('div');
-        messageEl.classList.add('chat-message', sender);
+        // --- State ---
+        let currentAgent = "Strategos"; // Default agent
+        let currentTheme = localStorage.getItem("theme") || "dark"; // Get theme from localStorage or default to dark
+        let currentCarouselSlide = 0;
+        const carouselSlides = [
+          {
+            icon: "fas fa-brain",
+            title: "Welcome to POLYMIND",
+            text: "Your intelligent AI assistant, ready to revolutionize the way you work. Fast, smart, and secure.",
+          },
+          {
+            icon: "fas fa-rocket",
+            title: "Boost Your Productivity",
+            text: "Leverage specialized AI agents for strategic planning, data analysis, logistics, and more.",
+          },
+          {
+            icon: "fas fa-shield-alt",
+            title: "Secure & Reliable",
+            text: "Your data is protected with military-grade encryption. Focus on your mission, we handle the rest.",
+          },
+        ];
 
-        const avatarContent = sender === 'user' ? 'CB' : '<i class="fas fa-robot"></i>';
-        const senderName = sender === 'user' ? 'Chỉ huy Bravo' : currentAgent;
-        const time = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        // --- Functions ---
 
-        messageEl.innerHTML = `
+        /**
+         * Appends a message to the chat log
+         * @param {string} sender - 'user' or 'ai'
+         * @param {string} text - The message content
+         * @param {boolean} showFeedback - Whether to show feedback buttons for AI messages
+         */
+        const addMessage = (sender, text, showFeedback = false) => {
+          const messageEl = document.createElement("div");
+          messageEl.classList.add("chat-message", sender);
+
+          const avatarContent =
+            sender === "user" ? "CB" : '<i class="fas fa-robot"></i>';
+          const senderName =
+            sender === "user" ? "Commander Bravo" : currentAgent;
+          const time = new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+
+          let feedbackHtml = "";
+          if (sender === "ai" && showFeedback) {
+            feedbackHtml = `
+                <div class="message-actions">
+                    <button class="feedback-btn" data-feedback="up" title="Good response"><i class="fas fa-thumbs-up"></i></button>
+                    <button class="feedback-btn" data-feedback="down" title="Poor response"><i class="fas fa-thumbs-down"></i></button>
+                    <button class="feedback-btn" data-feedback="revise" title="Suggest revision">Revise</button>
+                </div>
+            `;
+          }
+
+          messageEl.innerHTML = `
             <div class="avatar">${avatarContent}</div>
             <div class="message-content">
                 <p>${text}</p>
+                ${feedbackHtml}
                 <span class="message-meta">${senderName} • ${time}</span>
             </div>
         `;
-        chatLog.appendChild(messageEl);
-        chatLog.scrollTop = chatLog.scrollHeight;
-    };
+          chatLog.appendChild(messageEl);
+          chatLog.scrollTop = chatLog.scrollHeight;
 
-    /**
-     * Simulates an AI response after a delay.
-     */
-    const simulateAIResponse = (userInput) => {
-        typingIndicator.style.display = 'flex';
-        chatLog.scrollTop = chatLog.scrollHeight;
+          // Add event listeners for feedback buttons
+          if (sender === "ai" && showFeedback) {
+            messageEl.querySelectorAll(".feedback-btn").forEach((button) => {
+              button.addEventListener("click", (e) => {
+                alert(
+                  `Feedback recorded for AI message: ${e.currentTarget.dataset.feedback}`
+                );
+                // Disable buttons after feedback
+                e.currentTarget.parentNode
+                  .querySelectorAll("button")
+                  .forEach((btn) => (btn.disabled = true));
+              });
+            });
+          }
+        };
 
-        setTimeout(() => {
-            typingIndicator.style.display = 'none';
-            let response = "Tôi đã nhận được yêu cầu của bạn. Đang xử lý...";
-            
-            if (userInput.toLowerCase().includes('hello') || userInput.toLowerCase().includes('xin chào')) {
-                response = `Xin chào, Chỉ huy. Agent ${currentAgent} luôn sẵn sàng.`;
-            } else if (userInput.toLowerCase().includes('phân tích')) {
-                response = `Đã tiến hành phân tích dựa trên dữ liệu có sẵn. Kết quả sơ bộ cho thấy có 3 điểm rủi ro và 2 cơ hội tiềm năng. Bạn có muốn xem chi tiết không?`;
-            } else if (userInput.toLowerCase().includes('kế hoạch')) {
-                response = `Bắt đầu xây dựng kế hoạch. Các yếu tố chính cần xem xét bao gồm: nguồn lực, thời gian và mục tiêu chiến lược. Vui lòng cung cấp thêm thông tin chi tiết.`;
+        /**
+         * Simulates an AI response after a delay
+         */
+        const simulateAIResponse = (userInput) => {
+          typingIndicator.style.display = "flex";
+          chatLog.scrollTop = chatLog.scrollHeight;
+
+          setTimeout(() => {
+            typingIndicator.style.display = "none";
+            let response = "Request received. Processing...";
+
+            if (
+              userInput.toLowerCase().includes("hello") ||
+              userInput.toLowerCase().includes("hi")
+            ) {
+              response = `Hello Commander. Agent ${currentAgent} at your service. How can I assist you further?`;
+            } else if (userInput.toLowerCase().includes("analyze")) {
+              response = `Analysis complete based on available data. Preliminary results show 3 risk points and 2 potential opportunities. Would you like details?`;
+            } else if (userInput.toLowerCase().includes("plan")) {
+              response = `Initiating plan development. Key considerations include: resources, timeline, and strategic objectives. Please provide additional details.`;
+            } else if (userInput.toLowerCase().includes("summarize")) {
+              response = `Summary generated. The key takeaways are: [Point 1], [Point 2], and [Point 3].`;
+            } else if (userInput.toLowerCase().includes("optimize")) {
+              response = `Optimization algorithm initiated. This may take a moment.`;
+            } else if (userInput.toLowerCase().includes("translate")) {
+              response = `Translation complete. Please provide the text for direct translation or attachment.`;
+            } else if (
+              userInput.toLowerCase().includes("what are my top priorities")
+            ) {
+              response = `Based on your recent activities and open tasks, your top priorities are: 1) Finalize X-25 report, 2) Review Q3 logistics plan, and 3) Brief the team on new intel.`;
             }
 
-            addMessage('ai', response);
-        }, 1500 + Math.random() * 1000);
-    };
+            addMessage("ai", response, true); // Show feedback buttons for AI responses
+          }, 1500 + Math.random() * 1000);
+        };
 
-    /**
-     * Updates the context panel with information about the current agent.
-     */
-    const updateContextPanel = (agentName) => {
-        const agentInfo = agentDatabase[agentName];
-        if (!agentInfo) {
-            contextContent.innerHTML = `<div class="placeholder">Không tìm thấy thông tin cho agent này.</div>`;
+        /**
+         * Updates the context panel with agent information
+         */
+        const updateContextPanel = (agentName) => {
+          const agentInfo = agentDatabase[agentName];
+          if (!agentInfo) {
+            contextContent.innerHTML = `<div class="placeholder">No information available for this agent.</div>`;
             return;
-        }
+          }
 
-        const capabilitiesList = agentInfo.capabilities.map(cap => 
-            `<li><i class="fas fa-check-circle"></i> ${cap}</li>`
-        ).join('');
+          const capabilitiesList = agentInfo.capabilities
+            .map((cap) => `<li><i class="fas fa-check-circle"></i> ${cap}</li>`)
+            .join("");
 
-        contextContent.innerHTML = `
+          contextContent.innerHTML = `
             <div class="agent-details">
                 <div class="detail-item">
-                    <strong>Mô tả</strong>
+                    <strong>Description</strong>
                     <p>${agentInfo.description}</p>
                 </div>
                 <div class="detail-item">
-                    <strong>Năng lực chính</strong>
+                    <strong>Core Capabilities</strong>
                     <ul class="capabilities-list">${capabilitiesList}</ul>
                 </div>
             </div>
         `;
-    };
+        };
 
-    /**
-     * Handles form submission.
-     */
-    chatForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const userInput = chatInput.value.trim();
-        if (userInput) {
-            addMessage('user', userInput);
-            chatInput.value = '';
-            chatInput.style.height = 'auto'; // Reset height
+        /**
+         * Updates the quick reply suggestions based on the current agent
+         */
+        const updateQuickReplySuggestions = (agentName) => {
+          const agentInfo = agentDatabase[agentName];
+          quickReplySuggestions.innerHTML = ""; // Clear existing
+          if (agentInfo && agentInfo.quickReplies) {
+            agentInfo.quickReplies.forEach((suggestion) => {
+              const button = document.createElement("button");
+              button.textContent = suggestion;
+              button.addEventListener("click", () => {
+                chatInput.value = suggestion;
+                chatInput.dispatchEvent(new Event("input")); // Trigger resize
+                chatInput.focus();
+              });
+              quickReplySuggestions.appendChild(button);
+            });
+          }
+        };
+
+        /**
+         * Handles form submission
+         */
+        chatForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const userInput = chatInput.value.trim();
+          if (userInput) {
+            addMessage("user", userInput);
+            chatInput.value = "";
+            chatInput.style.height = "auto"; // Reset height
             simulateAIResponse(userInput);
-        }
-    });
+          }
+        });
 
-    /**
-     * Handles keyboard shortcuts for sending messages.
-     */
-    chatInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+        /**
+         * Handles keyboard shortcuts
+         */
+        chatInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
-            chatForm.dispatchEvent(new Event('submit'));
-        }
-    });
-    
-    /**
-     * Auto-resizes the textarea based on content.
-     */
-    chatInput.addEventListener('input', () => {
-        chatInput.style.height = 'auto';
-        chatInput.style.height = `${chatInput.scrollHeight}px`;
-    });
+            chatForm.dispatchEvent(new Event("submit"));
+          }
+        });
 
-    /**
-     * Toggles the sidebar on mobile.
-     */
-    const toggleSidebar = () => {
-        workspace.classList.toggle('sidebar-open');
-    }
-    mobileMenuToggle.addEventListener('click', toggleSidebar);
-    sidebarOverlay.addEventListener('click', toggleSidebar);
+        /**
+         * Auto-resizes the textarea
+         */
+        chatInput.addEventListener("input", () => {
+          chatInput.style.height = "auto";
+          chatInput.style.height = `${chatInput.scrollHeight}px`;
+        });
 
+        /**
+         * Toggles the sidebar on mobile
+         */
+        const toggleSidebar = () => {
+          workspace.classList.toggle("sidebar-open");
+        };
+        mobileMenuToggle.addEventListener("click", toggleSidebar);
+        closeSidebarBtn.addEventListener("click", toggleSidebar); // Close button in sidebar header
+        sidebarOverlay.addEventListener("click", toggleSidebar);
 
-    /**
-     * Handles switching between AI agents.
-     */
-    agentLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
+        /**
+         * Handles switching between AI agents
+         */
+        agentLinks.forEach((link) => {
+          link.addEventListener("click", (e) => {
             e.preventDefault();
-            
-            // Update active class
-            agentLinks.forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
-            
+
+            // Remove active class from all agent and conversation links
+            agentLinks.forEach((l) => l.classList.remove("active"));
+            conversationLinks.forEach((l) => l.classList.remove("active"));
+
+            // Add active class to the clicked agent link
+            link.classList.add("active");
+
             // Update state and UI
             currentAgent = link.dataset.agent;
             const agentInfo = agentDatabase[currentAgent];
-            
-            chatHeaderTitle.textContent = `Đang trò chuyện với ${currentAgent}`;
+
+            chatHeaderTitleSpan.textContent = `Chat with ${currentAgent}`;
             chatHeaderIcon.className = `fas ${agentInfo.icon}`;
-            
-            // Clear chat and add new welcome message
-            chatLog.innerHTML = '';
-            addMessage('ai', `Agent ${currentAgent} sẵn sàng nhận lệnh. Tôi có thể giúp gì cho bạn?`);
-            
+
+            // Clear chat and add welcome message
+            chatLog.innerHTML = "";
+            addMessage(
+              "ai",
+              `Agent ${currentAgent} ready for commands. How may I assist you?`
+            );
+
             // Update context panel
             updateContextPanel(currentAgent);
+
+            // Update quick reply suggestions
+            updateQuickReplySuggestions(currentAgent);
+
+            // Close sidebar on mobile after selection
+            if (workspace.classList.contains("sidebar-open")) {
+              toggleSidebar();
+            }
+          });
         });
-    });
 
-    // --- Initial Setup ---
-    updateContextPanel(currentAgent); // Load initial agent info
-    document.querySelector('#agent-list a').classList.add('active'); // Set first agent as active
-});
-</script>
+        /**
+         * Handles switching between conversations (dummy functionality)
+         */
+        conversationLinks.forEach((link) => {
+          link.addEventListener("click", (e) => {
+            e.preventDefault();
 
-</body>
+            // Remove active class from all agent and conversation links
+            agentLinks.forEach((l) => l.classList.remove("active"));
+            conversationLinks.forEach((l) => l.classList.remove("active"));
+
+            // Add active class to the clicked conversation link
+            link.classList.add("active");
+
+            const convName = link.textContent.trim();
+            chatHeaderTitleSpan.textContent = convName;
+            chatHeaderIcon.className = `fas fa-comment`; // Generic icon for conversations
+
+            // Simulate loading conversation history
+            chatLog.innerHTML = "";
+            addMessage("ai", `Loading conversation: "${convName}".`);
+            setTimeout(() => {
+              addMessage("user", `What did we discuss about ${convName}?`);
+              setTimeout(() => {
+                addMessage(
+                  "ai",
+                  `In this conversation, we focused on the key aspects of "${convName}". What specific details are you looking for?`
+                );
+              }, 1000);
+            }, 500);
+
+            // Clear context panel for general conversations
+            contextContent.innerHTML = `<div class="placeholder">This is a general conversation. Select an AI Agent to see its details.</div>`;
+            quickReplySuggestions.innerHTML = ""; // Clear quick replies for general chat
+            if (workspace.classList.contains("sidebar-open")) {
+              toggleSidebar();
+            }
+          });
+        });
+
+        /**
+         * Toggles between dark and light themes
+         */
+        const toggleTheme = () => {
+          const newTheme =
+            document.body.dataset.theme === "dark" ? "light" : "dark";
+          document.body.dataset.theme = newTheme;
+          localStorage.setItem("theme", newTheme);
+          // Update the icon for theme toggle button
+          themeToggleBtn.querySelector("i").className =
+            newTheme === "dark" ? "fas fa-moon" : "fas fa-sun";
+        };
+        themeToggleBtn.addEventListener("click", toggleTheme);
+
+        /**
+         * Welcome Carousel Logic
+         */
+        const updateCarouselSlide = (index) => {
+          currentCarouselSlide = index;
+          const slide = carouselSlides[index];
+          welcomeCarousel.querySelector(".carousel-content i").className =
+            slide.icon;
+          welcomeCarousel.querySelector(".carousel-content h2").textContent =
+            slide.title;
+          welcomeCarousel.querySelector(".carousel-content p").textContent =
+            slide.text;
+
+          carouselDots.forEach((dot, idx) => {
+            if (idx === index) {
+              dot.classList.add("active");
+            } else {
+              dot.classList.remove("active");
+            }
+          });
+        };
+
+        carouselDots.forEach((dot) => {
+          dot.addEventListener("click", (e) => {
+            const slideIndex = parseInt(e.target.dataset.slide);
+            updateCarouselSlide(slideIndex);
+          });
+        });
+
+        startChatBtn.addEventListener("click", () => {
+          welcomeCarousel.classList.add("hidden");
+          // Ensure initial chat agent and conversation are active
+          document
+            .querySelector('#agent-list a[data-agent="Strategos"]')
+            .click();
+        });
+
+        // --- Initial Setup ---
+
+        // Apply saved theme
+        document.body.dataset.theme = currentTheme;
+        themeToggleBtn.querySelector("i").className =
+          currentTheme === "dark" ? "fas fa-moon" : "fas fa-sun";
+
+        // Check if user has visited before or if it's explicitly set to skip carousel
+        const hasVisited = localStorage.getItem("hasVisitedPolymind");
+        if (!hasVisited) {
+          welcomeCarousel.classList.remove("hidden");
+          updateCarouselSlide(0); // Show first slide initially
+          localStorage.setItem("hasVisitedPolymind", "true");
+        } else {
+          welcomeCarousel.classList.add("hidden");
+          // If no carousel, ensure initial agent and context are set up
+          updateContextPanel(currentAgent);
+          updateQuickReplySuggestions(currentAgent);
+          // Set Strategos as active by default if starting directly in chat
+          document
+            .querySelector('#agent-list a[data-agent="Strategos"]')
+            .classList.add("active");
+        }
+      });
+    </script>
+    <script src="chat.js"></script>
+  </body>
 </html>
