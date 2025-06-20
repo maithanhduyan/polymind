@@ -13,10 +13,13 @@ dependencies = [
     "python-dotenv",
     "typer",         # CLI optional
     "rich",          # Logging đẹp
+    "psutil",        # Process management
 ]
 
 [project.scripts]
-polymin = "backend.main:main"
+polymind = "backend.main:main"
+polymind-dev = "backend.main:dev_server"
+polymind-prod = "backend.main:prod_server"
 
 [build-system]
 requires = ["hatchling"]
