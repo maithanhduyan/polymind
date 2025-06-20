@@ -28,7 +28,7 @@ Dưới đây là một **đề xuất thiết kế framework tinh gọn, hiện
 ```
 my_project/
 │
-├── src/
+├── backend/
 │   ├── __init__.py
 │   ├── main.py         # Entry point
 │   ├── agents/         # Modular agents
@@ -68,7 +68,7 @@ dependencies = [
 virtualenvs.in-project = true
 
 [tool.pyright]
-include = ["src"]
+include = ["backend"]
 typeCheckingMode = "basic"
 ```
 
@@ -84,11 +84,11 @@ uv pip freeze > uv.lock
 
 ---
 
-## 🚀 `src/main.py` (entrypoint FastAPI/Agent)
+## 🚀 `backend/main.py` (entrypoint FastAPI/Agent)
 
 ```python
 from fastapi import FastAPI
-from src.services.health import router as health_router
+from backend.services.health import router as health_router
 
 app = FastAPI(title="FlashPy App")
 
@@ -104,7 +104,7 @@ async def root():
 ## 🔁 HOT RELOAD DEV SERVER
 
 ```bash
-uvicorn src.main:app --reload
+uvicorn backend.main:app --reload
 ```
 
 ---
@@ -114,9 +114,9 @@ uvicorn src.main:app --reload
 Dùng [`rye`](https://rye-up.com) hoặc viết shell alias:
 
 ```bash
-alias dev="uvicorn src.main:app --reload"
+alias dev="uvicorn backend.main:app --reload"
 alias test="pytest tests/"
-alias lint="ruff src"
+alias lint="ruff backend"
 alias type="pyright"
 ```
 
@@ -124,7 +124,7 @@ alias type="pyright"
 
 ## 🧪 PHÁT TRIỂN AGENT HOẶC AI MODULE
 
-* Agent = một module trong `src/agents/`
+* Agent = một module trong `backend/agents/`
 * Giao tiếp qua `LangChain`, `Instructor`, `OpenAI`, hoặc tự viết `router`
 * Mỗi agent có file riêng và init API hoặc CLI entry.
 

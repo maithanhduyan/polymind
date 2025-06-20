@@ -5,11 +5,11 @@ from pathlib import Path
 import json
 import asyncio
 from datetime import datetime
-from src.services.health import router as health_router
-from src.agents.manager import agent_manager
-from src.agents import AgentType, AgentResponse
-from src.config import config
-from src.utils.logger import get_logger
+from backend.services.health import router as health_router
+from backend.agents.manager import agent_manager
+from backend.agents import AgentType, AgentResponse
+from backend.config import config
+from backend.utils.logger import get_logger
 
 app = FastAPI(title="PolyMind App", description="Fast modern AI service framework")
 
@@ -211,11 +211,11 @@ async def websocket_endpoint(websocket: WebSocket):
         manager.disconnect(websocket)
 
 
-def main() -> None:
+def main() -> None:    
     """Entry point để chạy development server."""
     import uvicorn
 
-    uvicorn.run("src.main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("backend.main:app", host="127.0.0.1", port=8000, reload=True)
 
 
 if __name__ == "__main__":

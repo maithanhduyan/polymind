@@ -53,7 +53,7 @@ Luôn sử dụng thư mục `tests` để viết test.
   assert result.is_valid == True
   assert len(result.errors) == 0
   ```
-Thử nghiệm nhỏ trong thư mục `src/sandbox` với tên file có dạng `demo_*.py`
+Thử nghiệm nhỏ trong thư mục `backend/sandbox` với tên file có dạng `demo_*.py`
 
 ## **Best Practices**
 - **Luôn backup trước khi refactor lớn** (sử dụng .backup directory + git backup branch)

@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [project.scripts]
-polymin = "src.main:main"
+polymin = "backend.main:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -26,11 +26,11 @@ build-backend = "hatchling.build"
 package = true
 
 [tool.pyright]
-include = ["src"]
+include = ["backend"]
 typeCheckingMode = "basic"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src"]
+packages = ["backend"]
 
 [tool.hatch.metadata]
 allow-direct-references = true

@@ -1,6 +1,96 @@
 {
     "github.copilot.chat.codesearch.enabled": true,
-
     "chat.mcp.enabled": true,
-    "python.defaultInterpreterPath": "${workspaceFolder}/.venv"
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv",
+    // 
+    // BACKEND
+    // 
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        }
+    },
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.fixAll": [
+        "source.convertImportFormat"
+    ],
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.formatting.provider": "black",
+    "files.associations": {
+        "*.py": "python",
+        "*.pyi": "python",
+        "*.toml": "toml",
+        "*.yml": "yaml",
+        "*.yaml": "yaml"
+    },
+    // 
+    // FONTEND
+    // 
+    // Tắt CSS Language Server validation
+    "css.validate": false,
+    "css.enable": false,
+    "css.completion.completePropertyWithSemicolon": false,
+    "css.completion.triggerPropertyValueCompletion": false,
+    "css.hover.documentation": false,
+    "css.hover.references": false,
+    "scss.validate": false,
+    "scss.completion.completePropertyWithSemicolon": false,
+    "scss.completion.triggerPropertyValueCompletion": false,
+    "less.validate": false,
+    "less.completion.completePropertyWithSemicolon": false,
+    "less.completion.triggerPropertyValueCompletion": false,
+    "javascript.validate.enable": false,
+    "javascript.suggestionActions.enabled": false,
+    "javascript.updateImportsOnFileMove.enabled": "never",
+    "javascript.suggest.enabled": false,
+    "javascript.suggest.autoImports": false,
+    "typescript.validate.enable": false,
+    "typescript.suggestionActions.enabled": false,
+    "typescript.updateImportsOnFileMove.enabled": "never",
+    "typescript.suggest.enabled": false,
+    "typescript.suggest.autoImports": false,
+    // Tắt HTML Language Server validation
+    "html.validate.enable": false,
+    "html.trace.server": "off",
+    "html.validate.scripts": false,
+    "html.validate.styles": false,
+    "html.suggest.html5": false,
+    "html.autoClosingTags": false,
+    "html.completion.attributeDefaultValue": "empty",
+    "editor.formatOnSave": false,
+    "prettier.enable": false,
+    "[javascript]": {
+        "editor.formatOnSave": false,
+        "editor.defaultFormatter": null
+    },
+    "[typescript]": {
+        "editor.formatOnSave": false,
+        "editor.defaultFormatter": null
+    },
+    "[html]": {
+        "editor.formatOnSave": false,
+        "editor.defaultFormatter": null
+    },
+    "[css]": {
+        "editor.formatOnSave": false,
+        "editor.defaultFormatter": null
+    },
+    "[json]": {
+        "editor.formatOnSave": false,
+        "editor.defaultFormatter": null
+    },
+    // 
+    // OTHER
+    // 
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features",
+        "editor.quickSuggestions": {
+            "strings": true
+        },
+        "editor.suggest.insertMode": "replace"
+    }
 }
