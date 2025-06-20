@@ -6,15 +6,213 @@ class PolyMindChat {
         this.wsUrl = `ws://${window.location.host}/ws/chat`;
         this.messages = [];
         this.isTyping = false;
-        this.selectedAgent = 'general';
+        this.selectedAgent = 'deepseek';
         this.websocket = null;
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
         
+        // Logging và debugging
+        this.messageStats = {
+            sent: 0,
+            received: 0,
+            errors: 0,
+            connections: 0,
+            reconnects: 0
+        };
+        this.messageLog = [];
+        this.enableDetailedLogging = true;
+        
         this.init();
     }
 
+    /**
+     * Log chi tiết message với timestamp và preview
+     * @param {string} direction - 'SEND' hoặc 'RECEIVE'
+     * @param {object} data - Dữ liệu message
+     * @param {string} status - 'SUCCESS' hoặc 'ERROR'
+     */
+    logMessage(direction, data, status = 'SUCCESS') {
+        const timestamp = new Date().toISOString();
+        const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        const logEntry = {
+            id: messageId,
+            timestamp,
+            direction,
+            status,
+            data: JSON.parse(JSON.stringify(data)), // Deep clone
+            agent: this.selectedAgent,
+            size: JSON.stringify(data).length,
+            preview: this.getMessagePreview(data)
+        };
+        
+        // Thêm vào message log
+        this.messageLog.push(logEntry);
+        
+        // Giới hạn số lượng log entries (giữ 100 entries gần nhất)
+        if (this.messageLog.length > 100) {
+            this.messageLog = this.messageLog.slice(-100);
+        }
+        
+        // Update stats
+        if (direction === 'SEND') {
+            this.messageStats.sent++;
+        } else if (direction === 'RECEIVE') {
+            this.messageStats.received++;
+        }
+        
+        if (status === 'ERROR') {
+            this.messageStats.errors++;
+        }
+        
+        // Console logging với màu sắc
+        if (this.enableDetailedLogging) {
+            const emoji = direction === 'SEND' ? '📤' : '📥';
+            const statusEmoji = status === 'SUCCESS' ? '✅' : '❌';
+            const color = direction === 'SEND' ? '#4CAF50' : '#2196F3';
+            
+            console.group(`%c${emoji} ${direction} ${statusEmoji}`, `color: ${color}; font-weight: bold;`);
+            console.log(`🕒 Time: ${new Date(timestamp).toLocaleTimeString('vi-VN')}`);
+            console.log(`🎯 Agent: ${this.selectedAgent}`);
+            console.log(`📏 Size: ${logEntry.size} bytes`);
+            console.log(`👀 Preview: ${logEntry.preview}`);
+            console.log(`📦 Full Data:`, data);
+            console.groupEnd();
+        }
+        
+        return logEntry;
+    }
+    
+    /**
+     * Tạo preview ngắn gọn của message
+     * @param {object} data - Dữ liệu message
+     * @returns {string} Preview string
+     */
+    getMessagePreview(data) {
+        if (typeof data === 'string') {
+            return data.substring(0, 50) + (data.length > 50 ? '...' : '');
+        }
+        
+        if (data.content) {
+            const content = data.content.substring(0, 50);
+            return content + (data.content.length > 50 ? '...' : '');
+        }
+        
+        if (data.type) {
+            return `[${data.type}] ${JSON.stringify(data).substring(0, 30)}...`;
+        }
+        
+        return JSON.stringify(data).substring(0, 50) + '...';
+    }
+    
+    /**
+     * Log kết nối WebSocket
+     * @param {string} event - 'CONNECT', 'DISCONNECT', 'RECONNECT'
+     * @param {object} details - Chi tiết bổ sung
+     */
+    logConnection(event, details = {}) {
+        const timestamp = new Date().toISOString();
+        
+        const logEntry = {
+            timestamp,
+            event,
+            details,
+            readyState: this.websocket?.readyState,
+            reconnectAttempts: this.reconnectAttempts,
+            url: this.wsUrl
+        };
+        
+        // Update stats
+        if (event === 'CONNECT') {
+            this.messageStats.connections++;
+        } else if (event === 'RECONNECT') {
+            this.messageStats.reconnects++;
+        }
+        
+        // Console logging
+        const eventEmojis = {
+            'CONNECT': '🔌',
+            'DISCONNECT': '🔌❌',
+            'RECONNECT': '🔄'
+        };
+        
+        const emoji = eventEmojis[event] || '🔌';
+        console.log(`%c${emoji} WebSocket ${event}`, 'color: #FF9800; font-weight: bold;', logEntry);
+        
+        return logEntry;
+    }
+    
+    /**
+     * Lấy thống kê chi tiết về messages
+     * @returns {object} Statistics object
+     */
+    getMessageStats() {
+        const now = Date.now();
+        const oneHourAgo = now - (60 * 60 * 1000);
+        const recentMessages = this.messageLog.filter(log => 
+            new Date(log.timestamp).getTime() > oneHourAgo
+        );
+        
+        return {
+            ...this.messageStats,
+            totalMessages: this.messageLog.length,
+            recentMessages: recentMessages.length,
+            averageMessageSize: this.messageLog.length > 0 ? 
+                Math.round(this.messageLog.reduce((sum, log) => sum + log.size, 0) / this.messageLog.length) : 0,
+            errorRate: this.messageStats.sent > 0 ? 
+                Math.round((this.messageStats.errors / this.messageStats.sent) * 100) : 0,
+            connectionStatus: this.websocket?.readyState === WebSocket.OPEN ? 'CONNECTED' : 'DISCONNECTED',
+            uptime: this.getUptime()
+        };
+    }
+    
+    /**
+     * Lấy thời gian hoạt động
+     * @returns {string} Uptime string
+     */
+    getUptime() {
+        if (!this.startTime) return 'Unknown';
+        
+        const uptime = Date.now() - this.startTime;
+        const minutes = Math.floor(uptime / 60000);
+        const seconds = Math.floor((uptime % 60000) / 1000);
+        
+        return `${minutes}m ${seconds}s`;
+    }
+    
+    /**
+     * Debug helper - in ra thống kê console
+     */
+    printStats() {
+        const stats = this.getMessageStats();
+        
+        console.group('📊 PolyMind Chat Statistics');
+        console.table(stats);
+        console.groupEnd();
+        
+        return stats;
+    }
+    
+    /**
+     * Debug helper - in ra message log gần đây
+     * @param {number} limit - Số lượng messages gần nhất
+     */
+    printRecentMessages(limit = 10) {
+        const recent = this.messageLog.slice(-limit);
+        
+        console.group(`📋 Recent Messages (${recent.length})`);
+        recent.forEach(log => {
+            const emoji = log.direction === 'SEND' ? '📤' : '📥';
+            const statusEmoji = log.status === 'SUCCESS' ? '✅' : '❌';
+            console.log(`${emoji}${statusEmoji} [${new Date(log.timestamp).toLocaleTimeString()}] ${log.preview}`);
+        });
+        console.groupEnd();
+        
+        return recent;
+    }
+
     init() {
+        this.startTime = Date.now();
         this.setupEventListeners();
         this.setupTextarea();
         this.updateWelcomeTime();
@@ -22,43 +220,81 @@ class PolyMindChat {
         this.connectWebSocket();
         this.setupSidebar();
         
-        console.log('🧠 PolyMind Chat initialized with WebSocket and Sidebar');
-    }    /**
+        console.log('🧠 PolyMind Chat initialized with enhanced logging');
+        console.log('💡 Use debugChat() for debug helpers');
+    }/**
      * Khởi tạo WebSocket connection với error handling cải tiến
-     */
-    connectWebSocket() {
+     */    connectWebSocket() {
         try {
+            console.log(`🔌 [WebSocket] Attempting to connect to: ${this.wsUrl}`);
             this.websocket = new WebSocket(this.wsUrl);
             
             this.websocket.onopen = () => {
-                console.log('✅ WebSocket connected');
+                console.log('✅ [WebSocket] Connection established successfully');
+                console.log(`📊 [WebSocket] Ready state: ${this.websocket.readyState}`);
                 this.updateConnectionStatus('connected');
                 this.reconnectAttempts = 0;
                 
                 // Thêm animation cho status dot khi connected
                 this.animateStatusDot('success');
+                
+                // Log kết nối thành công
+                this.logConnection('CONNECT');
             };
 
             this.websocket.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                this.handleWebSocketMessage(data);
+                console.log('📥 [WebSocket] Message received from server:', {
+                    timestamp: new Date().toISOString(),
+                    dataSize: event.data.length,
+                    rawData: event.data
+                });
+                
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log('📦 [WebSocket] Parsed message data:', {
+                        type: data.type,
+                        agent: data.agent,
+                        model: data.model,
+                        contentLength: data.content?.length || 0,
+                        timestamp: data.timestamp
+                    });
+                    
+                    // Log message nhận được
+                    this.logMessage('RECEIVE', data);
+                    
+                    this.handleWebSocketMessage(data);
+                } catch (parseError) {
+                    console.error('❌ [WebSocket] Failed to parse message:', parseError);
+                    console.error('🔍 [WebSocket] Raw message data:', event.data);
+                }
             };
 
             this.websocket.onclose = () => {
-                console.log('❌ WebSocket disconnected');
+                console.log('❌ [WebSocket] Connection closed');
+                console.log(`📊 [WebSocket] Final ready state: ${this.websocket?.readyState || 'undefined'}`);
+                console.log(`🔄 [WebSocket] Reconnect attempt: ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
+                
                 this.updateConnectionStatus('disconnected');
                 this.animateStatusDot('error');
                 this.attemptReconnect();
+                
+                // Log ngắt kết nối
+                this.logConnection('DISCONNECT');
             };
 
             this.websocket.onerror = (error) => {
-                console.error('🚨 WebSocket error:', error);
+                console.error('� [WebSocket] Connection error occurred:', {
+                    timestamp: new Date().toISOString(),
+                    error: error,
+                    readyState: this.websocket?.readyState,
+                    url: this.wsUrl
+                });
                 this.updateConnectionStatus('disconnected');
                 this.animateStatusDot('error');
             };
 
         } catch (error) {
-            console.error('Failed to connect WebSocket:', error);
+            console.error('🚨 [WebSocket] Failed to initialize connection:', error);
             this.updateConnectionStatus('disconnected');
             this.animateStatusDot('error');
         }
@@ -74,14 +310,62 @@ class PolyMindChat {
                 this.connectWebSocket();
             }, 2000 * this.reconnectAttempts);
         }
-    }
+    }    handleWebSocketMessage(data) {
+        console.log('🎯 [WebSocket] Processing received message:', {
+            timestamp: new Date().toISOString(),
+            messageType: data.type,
+            agent: data.agent,
+            model: data.model,
+            hasContent: !!data.content,
+            contentLength: data.content?.length || 0
+        });
 
-    handleWebSocketMessage(data) {
-        if (data.type === 'ai_response') {
-            this.hideTyping();
-            this.addMessage(data.content, 'ai');
+        switch(data.type) {
+            case 'ai_response':
+                console.log('💬 [WebSocket] Handling AI response:', {
+                    agent: data.agent,
+                    model: data.model,
+                    contentPreview: data.content?.substring(0, 100) + (data.content?.length > 100 ? '...' : ''),
+                    serverTimestamp: data.timestamp
+                });
+                this.hideTyping();
+                this.addMessage(data.content, 'ai');
+                break;
+                
+            case 'ai_typing':
+                console.log('⌨️ [WebSocket] Agent typing indicator:', {
+                    agent: data.agent,
+                    serverTimestamp: data.timestamp
+                });
+                // Handle typing indicator if needed
+                break;
+                
+            case 'ai_chunk':
+                console.log('📝 [WebSocket] Received streaming chunk:', {
+                    agent: data.agent,
+                    chunkLength: data.content?.length || 0,
+                    serverTimestamp: data.timestamp
+                });
+                // Handle streaming chunks if needed
+                break;
+                
+            case 'error':
+                console.error('🚨 [WebSocket] Server error received:', {
+                    errorContent: data.content,
+                    serverTimestamp: data.timestamp
+                });
+                this.hideTyping();
+                this.addMessage(data.content || 'Đã xảy ra lỗi từ server', 'ai', true);
+                break;
+                
+            default:
+                console.warn('❓ [WebSocket] Unknown message type:', {
+                    type: data.type,
+                    data: data
+                });
+                break;
         }
-    }    /**
+    }/**
      * Cập nhật trạng thái kết nối với UI cải tiến
      * @param {string} status - Trạng thái kết nối ('connected', 'disconnected', 'connecting')
      */
@@ -224,9 +508,7 @@ class PolyMindChat {
         this.updateSendButton();
 
         // Show typing indicator
-        this.showTyping();
-
-        try {
+        this.showTyping();        try {
             // Send message via WebSocket
             const messageData = {
                 content: message,
@@ -234,10 +516,30 @@ class PolyMindChat {
                 timestamp: new Date().toISOString()
             };
             
+            console.log('📤 [WebSocket] Sending message to server:', {
+                timestamp: new Date().toISOString(),
+                messageLength: message.length,
+                agent: this.selectedAgent,
+                readyState: this.websocket.readyState,
+                messagePreview: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
+                fullData: messageData
+            });
+            
+            // Log message gửi đi
+            this.logMessage('SEND', messageData);
+            
             this.websocket.send(JSON.stringify(messageData));
             
+            console.log('✅ [WebSocket] Message sent successfully');
+            
         } catch (error) {
-            console.error('Error sending message:', error);
+            console.error('❌ [WebSocket] Error sending message:', {
+                timestamp: new Date().toISOString(),
+                error: error,
+                message: error.message,
+                readyState: this.websocket?.readyState,
+                messageLength: message.length
+            });
             this.hideTyping();
             this.addMessage('Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại.', 'ai', true);
         }
@@ -355,14 +657,12 @@ class PolyMindChat {
         // Generate response based on agent type and user message
         const response = this.generateAIResponse(userMessage);
         this.addMessage(response, 'ai');
-    }
-
-    generateAIResponse(userMessage) {
+    }    generateAIResponse(userMessage) {
         const responses = {
-            general: [
-                `Cảm ơn bạn đã hỏi "${userMessage}". Tôi sẽ giúp bạn tìm hiểu về vấn đề này.`,
-                `Đây là một câu hỏi thú vị về "${userMessage}". Hãy để tôi phân tích và đưa ra câu trả lời chi tiết.`,
-                `Tôi hiểu bạn muốn biết về "${userMessage}". Đây là những thông tin hữu ích tôi có thể chia sẻ.`
+            deepseek: [
+                `Cảm ơn bạn đã hỏi "${userMessage}". Tôi sẽ sử dụng DeepSeek V3 để phân tích và trả lời chi tiết.`,
+                `Đây là một câu hỏi thú vị về "${userMessage}". Với khả năng reasoning mạnh mẽ, tôi sẽ đưa ra câu trả lời toàn diện.`,
+                `Tôi hiểu bạn muốn biết về "${userMessage}". DeepSeek V3 sẽ giúp tôi cung cấp insights sâu sắc về vấn đề này.`
             ],
             coding: [
                 `Về vấn đề lập trình "${userMessage}", tôi sẽ giúp bạn với code example và best practices.`,
@@ -381,7 +681,7 @@ class PolyMindChat {
             ]
         };
 
-        const agentResponses = responses[this.selectedAgent] || responses.general;
+        const agentResponses = responses[this.selectedAgent] || responses.deepseek;
         const randomResponse = agentResponses[Math.floor(Math.random() * agentResponses.length)];
         
         return randomResponse + '\n\nBạn có muốn tôi giải thích thêm chi tiết về vấn đề này không?';
@@ -556,6 +856,77 @@ class PolyMindChat {
         this.addSystemMessage(`Đã chuyển sang cuộc trò chuyện: ${chatId}`);
     }
 
+    /**
+     * Get debug information for troubleshooting
+     * @returns {Object} Debug information object
+     */
+    getDebugInfo() {
+        return {
+            websocket: {
+                url: this.wsUrl,
+                readyState: this.websocket?.readyState,
+                readyStateText: this.getReadyStateText(),
+                isConnected: this.websocket?.readyState === WebSocket.OPEN,
+                reconnectAttempts: this.reconnectAttempts,
+                maxReconnectAttempts: this.maxReconnectAttempts
+            },
+            chat: {
+                selectedAgent: this.selectedAgent,
+                messageCount: this.messages.length,
+                isTyping: this.isTyping,
+                lastMessage: this.messages[this.messages.length - 1]
+            },
+            session: {
+                startTime: this.sessionStartTime || 'Not recorded',
+                uptime: this.sessionStartTime ? Date.now() - this.sessionStartTime : 0
+            }
+        };
+    }
+
+    /**
+     * Get human-readable WebSocket ready state
+     * @returns {string} Ready state description
+     */
+    getReadyStateText() {
+        if (!this.websocket) return 'Not initialized';
+        
+        const states = {
+            [WebSocket.CONNECTING]: 'CONNECTING',
+            [WebSocket.OPEN]: 'OPEN',
+            [WebSocket.CLOSING]: 'CLOSING',
+            [WebSocket.CLOSED]: 'CLOSED'
+        };
+        
+        return states[this.websocket.readyState] || 'UNKNOWN';
+    }
+
+    /**
+     * Log comprehensive session statistics
+     */
+    logSessionStats() {
+        const stats = {
+            timestamp: new Date().toISOString(),
+            session: {
+                duration: this.sessionStartTime ? Date.now() - this.sessionStartTime : 0,
+                messagesSent: this.messages.filter(m => m.sender === 'user').length,
+                messagesReceived: this.messages.filter(m => m.sender === 'ai').length,
+                reconnectAttempts: this.reconnectAttempts
+            },
+            connection: {
+                currentState: this.getReadyStateText(),
+                url: this.wsUrl,
+                selectedAgent: this.selectedAgent
+            },
+            performance: {
+                totalMessages: this.messages.length,
+                averageMessageLength: this.messages.reduce((sum, msg) => sum + msg.content.length, 0) / this.messages.length || 0
+            }
+        };
+
+        console.log('📊 [Session] Comprehensive statistics:', stats);
+        return stats;
+    }
+
     // ...existing code...
 }
 
@@ -571,6 +942,52 @@ window.clearChat = function() {
 window.exportChat = function() {
     if (window.polymindChat) {
         window.polymindChat.exportChat();
+    }
+};
+
+// Global debugging functions
+window.debugChat = function() {
+    if (window.polymindChat) {
+        const debugInfo = window.polymindChat.getDebugInfo();
+        console.log('🔍 [Debug] Chat debug information:', debugInfo);
+        return debugInfo;
+    } else {
+        console.warn('⚠️ [Debug] PolyMind chat not initialized');
+        return null;
+    }
+};
+
+window.chatStats = function() {
+    if (window.polymindChat) {
+        return window.polymindChat.logSessionStats();
+    } else {
+        console.warn('⚠️ [Debug] PolyMind chat not initialized');
+        return null;
+    }
+};
+
+window.testWebSocket = function() {
+    if (window.polymindChat && window.polymindChat.websocket) {
+        const ws = window.polymindChat.websocket;
+        console.log('🧪 [Test] WebSocket test message:', {
+            readyState: ws.readyState,
+            readyStateText: window.polymindChat.getReadyStateText(),
+            url: ws.url
+        });
+        
+        if (ws.readyState === WebSocket.OPEN) {
+            const testMessage = {
+                content: "Test message from browser console",
+                agent: window.polymindChat.selectedAgent,
+                timestamp: new Date().toISOString()
+            };
+            ws.send(JSON.stringify(testMessage));
+            console.log('✅ [Test] Test message sent successfully');
+        } else {
+            console.warn('⚠️ [Test] WebSocket not in OPEN state');
+        }
+    } else {
+        console.warn('⚠️ [Test] WebSocket not available');
     }
 };
 
@@ -597,5 +1014,84 @@ document.addEventListener('DOMContentLoaded', () => {
 window.PolyMindChat = {
     instance: null,
     version: '1.0.0',
-    debug: () => window.polymindChat ? window.polymindChat.getDebugInfo() : null
-};
+    debug: () => window.polymindChat ? window.polymindChat.getDebugInfo() : null,
+    stats: () => window.polymindChat ? window.polymindChat.logSessionStats() : null,
+    testWS: () => window.testWebSocket(),    /**
+     * Helper method for debugging
+     */
+    help() {
+        console.log(`
+🧠 PolyMind Chat Debug Console Help
+
+📊 Statistics & Info:
+- debugChat()               - Get debug information
+- chatStats()               - Get session statistics  
+- window.chat.printStats()  - Print detailed stats table
+- window.chat.printRecentMessages(10) - Print recent messages
+
+🔧 Testing & Utils:
+- testWebSocket()           - Send test message via WebSocket
+- window.chat.getMessageStats() - Get raw statistics object
+- window.chat.messageLog    - Access full message log array
+
+🎯 Agent & Connection:
+- window.chat.selectedAgent - Current selected agent
+- window.chat.websocket     - WebSocket connection object
+- window.chat.messageStats  - Live message statistics
+
+💡 Examples:
+  > debugChat()
+  > chatStats()  
+  > testWebSocket()
+  > window.chat.printRecentMessages(5)
+        `);
+        return this.getMessageStats();
+    }
+}
+
+// Initialize PolyMind Chat when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.chat = new PolyMindChat();
+    
+    // Global debug helpers - Generated by Copilot
+    window.debugChat = () => {
+        console.group('🧠 PolyMind Chat Debug Info');
+        console.log('Agent:', window.chat.selectedAgent);
+        console.log('WebSocket State:', window.chat.websocket?.readyState);
+        console.log('Connection URL:', window.chat.wsUrl);
+        console.log('Reconnect Attempts:', window.chat.reconnectAttempts);
+        console.log('Message Stats:', window.chat.getMessageStats());
+        console.log('Recent Messages:', window.chat.messageLog.slice(-5));
+        console.groupEnd();
+        return window.chat.getMessageStats();
+    };
+    
+    window.chatStats = () => {
+        return window.chat.printStats();
+    };
+    
+    window.testWebSocket = () => {
+        if (!window.chat.websocket || window.chat.websocket.readyState !== WebSocket.OPEN) {
+            console.warn('⚠️ WebSocket not connected');
+            return false;
+        }
+        
+        const testMessage = {
+            content: 'Test message from debug console - ' + new Date().toISOString(),
+            agent: window.chat.selectedAgent,
+            timestamp: new Date().toISOString()
+        };
+        
+        console.log('🧪 Sending test message via WebSocket:', testMessage);
+        window.chat.websocket.send(JSON.stringify(testMessage));
+        return true;
+    };
+    
+    // Make PolyMindChat available globally for advanced debugging
+    window.PolyMindChat = window.chat;
+    
+    console.log('🧠 PolyMind Chat initialized with enhanced logging');
+    console.log('💡 Type debugChat() for debug helpers');
+    console.log('📊 Type chatStats() for statistics');
+    console.log('🧪 Type testWebSocket() to test connection');
+});
