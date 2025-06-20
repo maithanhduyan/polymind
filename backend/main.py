@@ -1,5 +1,7 @@
 import sys
+import os
 import json
+import httpx
 from datetime import datetime
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
@@ -10,6 +12,7 @@ from backend.config import config
 from backend.core import lifecycle_manager, lifespan
 from backend.utils.logger import get_async_logger, get_logging_config
 from backend.websocket import ws_connection_manager
+from fastapi.middleware.cors import CORSMiddleware
 
 logger = get_async_logger(__name__)
 
@@ -19,150 +22,87 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Cấu hình CORS (cho phép tất cả nguồn trong ví dụ này)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-async def handle_streaming_response(
-    websocket: WebSocket, user_message: str, agent_id: str
-):
-    """Xử lý phản hồi streaming hiệu quả"""
-    await ws_connection_manager.send_personal_message(
-        json.dumps({"type": "ai_typing", "agent": agent_id}), websocket
-    )
-
-    agent = agent_manager.get_agent(agent_id)
-    if not agent:
-        logger.error(f"❌ Agent '{agent_id}' not available")
-        await ws_connection_manager.send_personal_message(
-            json.dumps(
-                {
-                    "type": "error",
-                    "content": f"Agent '{agent_id}' not available",
-                    "timestamp": datetime.now().isoformat(),
-                }
-            ),
-            websocket,
-        )
-        return
-
-    total_length = 0
-    try:
-        stream = await agent.stream_chat(user_message)
-        async for chunk in stream:
-            total_length += len(chunk)
-            await ws_connection_manager.send_personal_message(
-                json.dumps({"type": "ai_chunk", "content": chunk, "agent": agent_id}),
-                websocket,
-            )
-    except Exception as e:
-        logger.error(f"❌ Streaming error for agent '{agent_id}': {str(e)}")
-        await ws_connection_manager.send_personal_message(
-            json.dumps(
-                {
-                    "type": "error",
-                    "content": f"Processing error: {str(e)}",
-                    "timestamp": datetime.now().isoformat(),
-                }
-            ),
-            websocket,
-        )
-        return
-
-    # Gửi final response
-    await ws_connection_manager.send_personal_message(
-        json.dumps(
-            {
-                "type": "ai_response_complete",
-                "timestamp": datetime.now().isoformat(),
-                "agent": agent_id,
-                "total_length": total_length,
-            }
-        ),
-        websocket,
-    )
-    logger.info(f"✅ Streaming completed for '{agent_id}' - {total_length} chars")
+# Lấy API key từ biến môi trường
+TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
+API_URL = "https://api.together.xyz/v1/chat/completions"
+MODEL_NAME = "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
 
 
-async def handle_regular_response(
-    websocket: WebSocket, user_message: str, agent_id: str
-):
-    """Xử lý phản hồi thông thường"""
-    try:
-        response = await agent_manager.chat(user_message, agent_id)
-        await ws_connection_manager.send_personal_message(
-            json.dumps(
-                {
-                    "type": "ai_response",
-                    "content": response.content,
-                    "timestamp": datetime.now().isoformat(),
-                    "agent": agent_id,
-                    "model": response.model_name,
-                }
-            ),
-            websocket,
-        )
-        logger.info(
-            f"✅ Regular response for '{agent_id}' using '{response.model_name}' - {len(response.content)} chars"
-        )
-    except Exception as e:
-        logger.error(f"❌ Regular response error for '{agent_id}': {str(e)}")
-        await ws_connection_manager.send_personal_message(
-            json.dumps(
-                {
-                    "type": "error",
-                    "content": f"Processing error: {str(e)}",
-                    "timestamp": datetime.now().isoformat(),
-                }
-            ),
-            websocket,
-        )
+async def get_ai_response(messages: list):
+    """Gửi yêu cầu đến Together AI API và trả về phản hồi"""
+    headers = {
+        "Authorization": f"Bearer {TOGETHER_API_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    payload = {
+        "model": MODEL_NAME,
+        "messages": messages,
+        "max_tokens": 1024,
+        "temperature": 0.7,
+    }
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        """Gửi yêu cầu đến Together AI API chờ phản hồi 30 giây"""
+        try:
+            response = await client.post(API_URL, headers=headers, json=payload)
+            response.raise_for_status()
+            data = response.json()
+            return data["choices"][0]["message"]["content"].strip()
+        except Exception as e:
+            return f"Error: {str(e)}"
 
 
 @app.websocket("/ws/chat")
 async def websocket_endpoint(websocket: WebSocket):
-    await ws_connection_manager.connect(websocket)
-    agent_id = "deepseek"  # Default value
+    await websocket.accept()
+    chat_history = []
 
     try:
         while True:
+            # Nhận tin nhắn từ client
             data = await websocket.receive_text()
+            message_data = json.loads(data)
 
-            # Giới hạn kích thước message
-            if len(data) > 10240:
-                await ws_connection_manager.send_personal_message(
-                    json.dumps(
-                        {"type": "error", "content": "Message too large (max 10KB)"}
-                    ),
-                    websocket,
-                )
-                continue
+            # Thêm tin nhắn người dùng vào lịch sử chat
+            user_message = {"role": "user", "content": message_data["message"]}
+            chat_history.append(user_message)
 
             try:
-                message_data = json.loads(data)
-                user_message = message_data.get("content", "")
-                agent_id = message_data.get("agent", "deepseek")
-                is_streaming = message_data.get("streaming", False)
+                # Gọi API AI và nhận phản hồi
+                ai_response = await get_ai_response(chat_history)
 
-                # Log incoming message
-                logger.info(
-                    f"💬 Received message for agent '{agent_id}' (streaming: {is_streaming}): {user_message[:100]}{'...' if len(user_message) > 100 else ''}"
+                # Thêm phản hồi AI vào lịch sử chat
+                ai_message = {"role": "assistant", "content": ai_response}
+                chat_history.append(ai_message)
+
+                # Gửi phản hồi về client
+                await websocket.send_text(
+                    json.dumps({"sender": "ai", "message": ai_response})
                 )
-
-                if is_streaming:
-                    await handle_streaming_response(websocket, user_message, agent_id)
-                else:
-                    await handle_regular_response(websocket, user_message, agent_id)
-
-            except json.JSONDecodeError:
-                await ws_connection_manager.send_personal_message(
-                    json.dumps({"type": "error", "content": "Invalid JSON format"}),
-                    websocket,
+            except Exception as e:
+                await websocket.send_text(
+                    json.dumps(
+                        {"sender": "system", "message": f"AI service error: {str(e)}"}
+                    )
                 )
 
     except WebSocketDisconnect:
-        logger.info(f"🔌 WebSocket client disconnected for agent '{agent_id}'")
+        logger.info("Client disconnected")
     except Exception as e:
-        logger.error(f"❌ WebSocket error for agent '{agent_id}': {str(e)}")
-    finally:
-        await ws_connection_manager.disconnect(websocket)
+        await websocket.send_text(
+            json.dumps({"sender": "system", "message": f"Server error: {str(e)}"})
+        )
+        await websocket.close()
 
 
 # Handle Chrome DevTools request to avoid 404

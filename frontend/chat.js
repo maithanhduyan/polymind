@@ -313,6 +313,34 @@ class PolyMindChat {
     }    handleWebSocketMessage(data) {
         console.log('🎯 [WebSocket] Processing received message:', {
             timestamp: new Date().toISOString(),
+            rawData: data
+        });
+
+        // Handle format từ sandbox server: {"sender": "ai", "message": "..."}
+        if (data.sender && data.message) {
+            console.log('💬 [WebSocket] Handling server response format:', {
+                sender: data.sender,
+                messagePreview: data.message.substring(0, 100) + (data.message.length > 100 ? '...' : '')
+            });
+            
+            this.hideTyping();
+            
+            switch(data.sender) {
+                case 'ai':
+                    this.addMessage(data.message, 'ai');
+                    break;
+                case 'system':
+                    this.addMessage(data.message, 'ai', true);
+                    break;
+                default:
+                    this.addMessage(data.message, 'ai');
+                    break;
+            }
+            return;
+        }
+
+        // Handle format cũ với type: {"type": "ai_response", "content": "..."}
+        console.log('🎯 [WebSocket] Processing message with type format:', {
             messageType: data.type,
             agent: data.agent,
             model: data.model,
@@ -509,9 +537,9 @@ class PolyMindChat {
 
         // Show typing indicator
         this.showTyping();        try {
-            // Send message via WebSocket
+            // Send message via WebSocket - sử dụng format mà server expect
             const messageData = {
-                content: message,
+                message: message,  // Đổi từ 'content' thành 'message' để match với server
                 agent: this.selectedAgent,
                 timestamp: new Date().toISOString()
             };
