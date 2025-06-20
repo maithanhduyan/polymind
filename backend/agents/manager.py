@@ -8,14 +8,17 @@ Centralized management cho tất cả AI agents.
 import os
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
-
 from . import BaseAgent, AgentType, AgentResponse
 from .deepseek import DeepSeekAgent, create_deepseek_agent
+from backend.utils.logger import get_async_logger
+
+logger = get_async_logger(__name__)
 
 
 @dataclass
 class AgentInfo:
     """Thông tin về một agent."""
+
     name: str
     type: AgentType
     description: str
@@ -27,53 +30,53 @@ class AgentInfo:
 class AgentManager:
     """
     Manager để quản lý và route requests đến các agents.
-    
+
     Chức năng:
     - Registry các agents
     - Route messages đến appropriate agent
     - Load balancing và fallback
     - Agent health monitoring
     """
-    
+
     def __init__(self):
         self.agents: Dict[str, BaseAgent] = {}
         self._default_agent: Optional[str] = None
-    
+
     def register_agent(self, agent_id: str, agent: BaseAgent, is_default: bool = False):
         """
         Đăng ký agent vào manager.
-        
+
         Args:
             agent_id: Unique ID cho agent
             agent: BaseAgent instance
             is_default: Có phải default agent không
         """
         self.agents[agent_id] = agent
-        
+
         if is_default or self._default_agent is None:
             self._default_agent = agent_id
-    
+
     def get_agent(self, agent_id: Optional[str] = None) -> Optional[BaseAgent]:
         """
         Lấy agent theo ID.
-        
+
         Args:
             agent_id: ID của agent (None = default agent)
-            
+
         Returns:
-            BaseAgent instance hoặc None        """
+            BaseAgent instance hoặc None"""
         if agent_id is None:
             agent_id = self._default_agent
-            
+
         if agent_id is None:
             return None
-            
+
         return self.agents.get(agent_id)
-    
+
     def list_agents(self) -> List[AgentInfo]:
         """Liệt kê tất cả agents có sẵn."""
         agent_infos = []
-        
+
         for agent_id, agent in self.agents.items():
             info = agent.info
             agent_info = AgentInfo(
@@ -84,101 +87,106 @@ class AgentManager:
                 capabilities=info.get("capabilities", []),
                 model_info={
                     "model": info.get("model"),
-                    "provider": info.get("provider")
-                }
+                    "provider": info.get("provider"),
+                },
             )
             agent_infos.append(agent_info)
-        
+
         return agent_infos
-    
-    async def chat(self, message: str, agent_id: Optional[str] = None, **kwargs) -> AgentResponse:
+
+    async def chat(
+        self, message: str, agent_id: Optional[str] = None, **kwargs
+    ) -> AgentResponse:
         """
         Gửi message đến agent.
-        
+
         Args:
             message: Tin nhắn từ user
             agent_id: ID của agent (None = default)
             **kwargs: Tham số bổ sung
-            
+
         Returns:
             AgentResponse
         """
         agent = self.get_agent(agent_id)
-        
+
         if agent is None:
             # Fallback response
             return AgentResponse(
                 content="Xin lỗi, agent không khả dụng. Vui lòng thử lại sau.",
                 agent_type=AgentType.GENERAL,
                 model_name="fallback",
-                metadata={"error": True, "reason": "agent_unavailable"}
+                metadata={"error": True, "reason": "agent_unavailable"},
             )
-        
+
         return await agent.chat(message, **kwargs)
-    
+
     async def setup_default_agents(self):
         """Thiết lập các agents mặc định."""
         try:
             # DeepSeek agent (primary)
             deepseek_agent = create_deepseek_agent()
             self.register_agent("deepseek", deepseek_agent, is_default=True)
-            
-            print("✅ DeepSeek agent registered successfully")
-            
+
+            logger.info("✅ DeepSeek agent registered successfully")
+
         except Exception as e:
-            print(f"❌ Failed to setup DeepSeek agent: {e}")
-            print("💡 Hãy đảm bảo TOGETHER_API_KEY environment variable được set")
-    
+            logger.error(f"❌ Failed to setup DeepSeek agent: {e}")
+            logger.error(
+                "💡 Hãy đảm bảo TOGETHER_API_KEY environment variable được set"
+            )
+
     async def health_check(self) -> Dict[str, Any]:
         """Kiểm tra health của tất cả agents."""
         health_status = {
             "total_agents": len(self.agents),
             "healthy_agents": 0,
-            "agents": {}
+            "agents": {},
         }
-        
+
         for agent_id, agent in self.agents.items():
             try:
                 # Simple health check bằng cách gọi info
                 agent_info = agent.info
                 health_status["agents"][agent_id] = {
                     "status": "healthy",
-                    "info": agent_info
+                    "info": agent_info,
                 }
                 health_status["healthy_agents"] += 1
-                
-            except Exception as e:                health_status["agents"][agent_id] = {
+
+            except Exception as e:
+                health_status["agents"][agent_id] = {
                     "status": "unhealthy",
-                    "error": str(e)
+                    "error": str(e),
                 }
-        
+
         return health_status
-    
+
     async def close_all(self):
         """Đóng tất cả agents."""
         for agent in self.agents.values():
-            if hasattr(agent, 'close') and callable(getattr(agent, 'close', None)):
+            if hasattr(agent, "close") and callable(getattr(agent, "close", None)):
                 try:
-                    close_method = getattr(agent, 'close')
+                    close_method = getattr(agent, "close")
                     await close_method()
                 except Exception as e:
-                    print(f"Error closing agent: {e}")
-    
+                    logger.error(f"Error closing agent: {e}")
+
     def get_agent_by_type(self, agent_type: AgentType) -> Optional[BaseAgent]:
         """Lấy agent theo type."""
         for agent in self.agents.values():
             if agent.agent_type == agent_type:
                 return agent
         return None
-    
+
     def get_capabilities(self) -> Dict[str, List[str]]:
         """Lấy capabilities của tất cả agents."""
         capabilities = {}
-        
+
         for agent_id, agent in self.agents.items():
             info = agent.info
             capabilities[agent_id] = info.get("capabilities", [])
-        
+
         return capabilities
 
 

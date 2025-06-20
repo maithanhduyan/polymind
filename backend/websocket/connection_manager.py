@@ -5,136 +5,47 @@ WebSocket Connection Manager for PolyMind Chat
 Manages WebSocket connections, message routing, and connection lifecycle.
 """
 
-import json
-from typing import List
-from datetime import datetime
-from fastapi import WebSocket
+import asyncio
+from fastapi import WebSocket, WebSocketDisconnect
+from backend.utils.logger import get_async_logger
+
+logger = get_async_logger(__name__)
 
 
 class ConnectionManager:
-    """
-    WebSocket connection manager for handling multiple chat connections.
-
-    Features:
-    - Connection lifecycle management
-    - Message broadcasting and personal messaging
-    - Connection logging and monitoring
-    """
-
     def __init__(self):
-        self.active_connections: List[WebSocket] = []
+        self.active_connections: set[WebSocket] = set()
+        self._lock = asyncio.Lock()
 
     async def connect(self, websocket: WebSocket):
-        """Accept new WebSocket connection and add to active list."""
         await websocket.accept()
-        self.active_connections.append(websocket)
-
-        # Simple logging without complex async logger for now
-        print(
-            f"🔌 New WebSocket connection established. Total connections: {len(self.active_connections)}"
-        )
+        async with self._lock:
+            self.active_connections.add(websocket)
+        logger.info(f"🔌 New connection. Total: {len(self.active_connections)}")
 
     async def disconnect(self, websocket: WebSocket):
-        """Remove WebSocket from active connections."""
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
-
-        print(
-            f"🔌 WebSocket connection closed. Remaining connections: {len(self.active_connections)}"
-        )
+        async with self._lock:
+            if websocket in self.active_connections:
+                self.active_connections.remove(websocket)
+        logger.info(f"🔌 Connection closed. Remaining: {len(self.active_connections)}")
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
-        """Send message to specific WebSocket connection."""
         try:
             await websocket.send_text(message)
-        except Exception as e:
-            print(f"❌ Failed to send message to websocket: {str(e)}")
+        except (WebSocketDisconnect, RuntimeError):
             await self.disconnect(websocket)
 
-    async def send_json_message(self, data: dict, websocket: WebSocket):
-        """Send JSON message to specific WebSocket connection."""
-        message = json.dumps(data, ensure_ascii=False)
-        await self.send_personal_message(message, websocket)
-
     async def broadcast(self, message: str):
-        """Broadcast message to all active connections."""
-        failed_connections = []
+        """Broadcast message to all active connections efficiently"""
+        tasks = []
+        async with self._lock:
+            connections = list(self.active_connections)
 
-        for connection in self.active_connections:
-            try:
-                await connection.send_text(message)
-            except Exception:
-                failed_connections.append(connection)
+        for connection in connections:
+            tasks.append(self.send_personal_message(message, connection))
 
-        # Remove failed connections
-        for failed_conn in failed_connections:
-            await self.disconnect(failed_conn)
-
-    async def broadcast_json(self, data: dict):
-        """Broadcast JSON message to all active connections."""
-        message = json.dumps(data, ensure_ascii=False)
-        await self.broadcast(message)
-
-    async def send_typing_indicator(self, agent_id: str, websocket: WebSocket):
-        """Send typing indicator for specific agent."""
-        await self.send_json_message(
-            {
-                "type": "ai_typing",
-                "agent": agent_id,
-                "timestamp": datetime.now().isoformat(),
-            },
-            websocket,
-        )
-
-    async def send_chunk(self, chunk: str, agent_id: str, websocket: WebSocket):
-        """Send streaming chunk to WebSocket."""
-        await self.send_json_message(
-            {
-                "type": "ai_chunk",
-                "content": chunk,
-                "agent": agent_id,
-                "timestamp": datetime.now().isoformat(),
-            },
-            websocket,
-        )
-
-    async def send_response(
-        self, content: str, agent_id: str, model_name: str, websocket: WebSocket
-    ):
-        """Send complete AI response to WebSocket."""
-        await self.send_json_message(
-            {
-                "type": "ai_response",
-                "content": content,
-                "agent": agent_id,
-                "model": model_name,
-                "timestamp": datetime.now().isoformat(),
-            },
-            websocket,
-        )
-
-    async def send_error(self, error_message: str, websocket: WebSocket):
-        """Send error message to WebSocket."""
-        await self.send_json_message(
-            {
-                "type": "error",
-                "content": error_message,
-                "timestamp": datetime.now().isoformat(),
-            },
-            websocket,
-        )
-
-    def get_connection_count(self) -> int:
-        """Get number of active connections."""
-        return len(self.active_connections)
-
-    def get_connection_info(self) -> dict:
-        """Get connection statistics."""
-        return {
-            "total_connections": len(self.active_connections),
-            "status": "healthy" if self.active_connections else "no_connections",
-        }
+        await asyncio.gather(*tasks, return_exceptions=True)
 
 
 # Global connection manager instance
-connection_manager = ConnectionManager()
+ws_connection_manager = ConnectionManager()

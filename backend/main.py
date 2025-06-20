@@ -1,33 +1,176 @@
-import logging
-import logging.config
 import sys
+import json
+from datetime import datetime
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from pathlib import Path
-import json
-import asyncio
-from datetime import datetime
 from backend.services.health import router as health_router
 from backend.agents.manager import agent_manager
-from backend.agents import AgentType, AgentResponse
 from backend.config import config
-from backend.utils.logger import get_async_logger
-
-
-# Quan trọng: Import LifecycleManager và lifespan
 from backend.core import lifecycle_manager, lifespan
+from backend.utils.logger import get_async_logger, get_logging_config
+from backend.websocket import ws_connection_manager
 
 logger = get_async_logger(__name__)
 
-# Sử dụng lifespan trong khởi tạo FastAPI
 app = FastAPI(
     title="PolyMind App",
     description="Fast modern AI service framework",
-    lifespan=lifespan,  # Tích hợp lifecycle manager
+    lifespan=lifespan,
 )
 
-# WebSocket connection manager (giữ nguyên phần này nếu có)
+
+async def handle_streaming_response(
+    websocket: WebSocket, user_message: str, agent_id: str
+):
+    """Xử lý phản hồi streaming hiệu quả"""
+    await ws_connection_manager.send_personal_message(
+        json.dumps({"type": "ai_typing", "agent": agent_id}), websocket
+    )
+
+    agent = agent_manager.get_agent(agent_id)
+    if not agent:
+        logger.error(f"❌ Agent '{agent_id}' not available")
+        await ws_connection_manager.send_personal_message(
+            json.dumps(
+                {
+                    "type": "error",
+                    "content": f"Agent '{agent_id}' not available",
+                    "timestamp": datetime.now().isoformat(),
+                }
+            ),
+            websocket,
+        )
+        return
+
+    total_length = 0
+    try:
+        stream = await agent.stream_chat(user_message)
+        async for chunk in stream:
+            total_length += len(chunk)
+            await ws_connection_manager.send_personal_message(
+                json.dumps({"type": "ai_chunk", "content": chunk, "agent": agent_id}),
+                websocket,
+            )
+    except Exception as e:
+        logger.error(f"❌ Streaming error for agent '{agent_id}': {str(e)}")
+        await ws_connection_manager.send_personal_message(
+            json.dumps(
+                {
+                    "type": "error",
+                    "content": f"Processing error: {str(e)}",
+                    "timestamp": datetime.now().isoformat(),
+                }
+            ),
+            websocket,
+        )
+        return
+
+    # Gửi final response
+    await ws_connection_manager.send_personal_message(
+        json.dumps(
+            {
+                "type": "ai_response_complete",
+                "timestamp": datetime.now().isoformat(),
+                "agent": agent_id,
+                "total_length": total_length,
+            }
+        ),
+        websocket,
+    )
+    logger.info(f"✅ Streaming completed for '{agent_id}' - {total_length} chars")
+
+
+async def handle_regular_response(
+    websocket: WebSocket, user_message: str, agent_id: str
+):
+    """Xử lý phản hồi thông thường"""
+    try:
+        response = await agent_manager.chat(user_message, agent_id)
+        await ws_connection_manager.send_personal_message(
+            json.dumps(
+                {
+                    "type": "ai_response",
+                    "content": response.content,
+                    "timestamp": datetime.now().isoformat(),
+                    "agent": agent_id,
+                    "model": response.model_name,
+                }
+            ),
+            websocket,
+        )
+        logger.info(
+            f"✅ Regular response for '{agent_id}' using '{response.model_name}' - {len(response.content)} chars"
+        )
+    except Exception as e:
+        logger.error(f"❌ Regular response error for '{agent_id}': {str(e)}")
+        await ws_connection_manager.send_personal_message(
+            json.dumps(
+                {
+                    "type": "error",
+                    "content": f"Processing error: {str(e)}",
+                    "timestamp": datetime.now().isoformat(),
+                }
+            ),
+            websocket,
+        )
+
+
+@app.websocket("/ws/chat")
+async def websocket_endpoint(websocket: WebSocket):
+    await ws_connection_manager.connect(websocket)
+    agent_id = "deepseek"  # Default value
+
+    try:
+        while True:
+            data = await websocket.receive_text()
+
+            # Giới hạn kích thước message
+            if len(data) > 10240:
+                await ws_connection_manager.send_personal_message(
+                    json.dumps(
+                        {"type": "error", "content": "Message too large (max 10KB)"}
+                    ),
+                    websocket,
+                )
+                continue
+
+            try:
+                message_data = json.loads(data)
+                user_message = message_data.get("content", "")
+                agent_id = message_data.get("agent", "deepseek")
+                is_streaming = message_data.get("streaming", False)
+
+                # Log incoming message
+                logger.info(
+                    f"💬 Received message for agent '{agent_id}' (streaming: {is_streaming}): {user_message[:100]}{'...' if len(user_message) > 100 else ''}"
+                )
+
+                if is_streaming:
+                    await handle_streaming_response(websocket, user_message, agent_id)
+                else:
+                    await handle_regular_response(websocket, user_message, agent_id)
+
+            except json.JSONDecodeError:
+                await ws_connection_manager.send_personal_message(
+                    json.dumps({"type": "error", "content": "Invalid JSON format"}),
+                    websocket,
+                )
+
+    except WebSocketDisconnect:
+        logger.info(f"🔌 WebSocket client disconnected for agent '{agent_id}'")
+    except Exception as e:
+        logger.error(f"❌ WebSocket error for agent '{agent_id}': {str(e)}")
+    finally:
+        await ws_connection_manager.disconnect(websocket)
+
+
+# Handle Chrome DevTools request to avoid 404
+@app.get("/.well-known/appspecific/com.chrome.devtools.json")
+async def chrome_devtools_config():
+    """Handle Chrome DevTools configuration request to avoid 404."""
+    return {"status": "not_configured"}
+
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
@@ -93,28 +236,24 @@ def main() -> None:
             host=config.HOST,
             port=config.PORT,
             reload=config.DEBUG,
-            log_config=None,  # Sử dụng logging của chúng ta, không dùng của Uvicorn
+            log_config=get_logging_config(),
+            # Tối ưu cho WebSocket
+            ws_ping_interval=20,
+            ws_ping_timeout=30,
+            timeout_keep_alive=5,
         )
-
     except KeyboardInterrupt:
-        # Người dùng nhấn Ctrl+C để dừng server
         logger.info("\n🛑 Server shutdown requested by user")
-
     except Exception as e:
-        # Lỗi nghiêm trọng khi khởi động server
         logger.error(f"💥 Server startup failed: {e}")
         logger.exception("Server startup error details:")
         sys.exit(1)
-
     finally:
-        # Luôn chạy phần này dù có lỗi hay không
         logger.info("🔚 PolyMind server stopped")
 
 
 if __name__ == "__main__":
-    # Chỉ khởi tạo logger ở main thread
-    logger = get_async_logger("server_main")
-
+    # logger = get_async_logger("server_main")
     try:
         logger.info("🚀 Starting PolyMind server in development mode")
         main()

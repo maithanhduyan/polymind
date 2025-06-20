@@ -9,21 +9,21 @@ from typing import Optional
 
 class Config:
     """Application configuration."""
-    
+
     # Together.xyz API configuration
     TOGETHER_API_KEY: Optional[str] = os.getenv("TOGETHER_API_KEY")
     TOGETHER_BASE_URL: str = "https://api.together.xyz/v1"
-    
+
     # DeepSeek model configuration
     DEEPSEEK_MODEL: str = "deepseek-ai/DeepSeek-V3"
     DEEPSEEK_MAX_TOKENS: int = 4000
     DEEPSEEK_TEMPERATURE: float = 0.7
-    
+
     # Application settings
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
-    HOST: str = os.getenv("HOST", "127.0.0.1")
+    HOST: str = os.getenv("HOST", "0.0.0.0")
     PORT: int = int(os.getenv("PORT", "8000"))
-    
+
     @classmethod
     def check_required_env(cls) -> bool:
         """Kiểm tra các environment variables bắt buộc."""
