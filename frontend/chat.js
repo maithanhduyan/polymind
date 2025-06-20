@@ -20,10 +20,12 @@ class PolyMindChat {
         this.updateWelcomeTime();
         this.setupAgentSelector();
         this.connectWebSocket();
+        this.setupSidebar();
         
-        console.log('🧠 PolyMind Chat initialized with WebSocket');
-    }
-
+        console.log('🧠 PolyMind Chat initialized with WebSocket and Sidebar');
+    }    /**
+     * Khởi tạo WebSocket connection với error handling cải tiến
+     */
     connectWebSocket() {
         try {
             this.websocket = new WebSocket(this.wsUrl);
@@ -32,6 +34,9 @@ class PolyMindChat {
                 console.log('✅ WebSocket connected');
                 this.updateConnectionStatus('connected');
                 this.reconnectAttempts = 0;
+                
+                // Thêm animation cho status dot khi connected
+                this.animateStatusDot('success');
             };
 
             this.websocket.onmessage = (event) => {
@@ -42,17 +47,20 @@ class PolyMindChat {
             this.websocket.onclose = () => {
                 console.log('❌ WebSocket disconnected');
                 this.updateConnectionStatus('disconnected');
+                this.animateStatusDot('error');
                 this.attemptReconnect();
             };
 
             this.websocket.onerror = (error) => {
                 console.error('🚨 WebSocket error:', error);
                 this.updateConnectionStatus('disconnected');
+                this.animateStatusDot('error');
             };
 
         } catch (error) {
             console.error('Failed to connect WebSocket:', error);
             this.updateConnectionStatus('disconnected');
+            this.animateStatusDot('error');
         }
     }
 
@@ -73,25 +81,37 @@ class PolyMindChat {
             this.hideTyping();
             this.addMessage(data.content, 'ai');
         }
-    }
-
+    }    /**
+     * Cập nhật trạng thái kết nối với UI cải tiến
+     * @param {string} status - Trạng thái kết nối ('connected', 'disconnected', 'connecting')
+     */
     updateConnectionStatus(status) {
         const connectionStatus = document.getElementById('connectionStatus');
         const statusText = document.getElementById('statusText');
         
+        if (!connectionStatus) return;
+        
         connectionStatus.className = `connection-status ${status}`;
         
-        switch (status) {
-            case 'connected':
-                statusText.textContent = 'Connected';
-                break;
-            case 'disconnected':
-                statusText.textContent = 'Disconnected';
-                break;
-            case 'connecting':
-                statusText.textContent = 'Connecting...';
-                break;
+        // Map trạng thái sang text tiếng Việt
+        const statusMessages = {
+            'connected': 'Đã kết nối',
+            'disconnected': 'Mất kết nối',
+            'connecting': 'Đang kết nối...'
+        };
+        
+        const message = statusMessages[status] || 'Không xác định';
+        
+        // Cập nhật tooltip
+        connectionStatus.setAttribute('data-status', message);
+        
+        // Cập nhật text element nếu có
+        if (statusText) {
+            statusText.textContent = message;
         }
+        
+        // Log cho debugging
+        console.log(`🔌 Connection status: ${status} (${message})`);
     }
 
     setupEventListeners() {
@@ -370,31 +390,157 @@ class PolyMindChat {
         this.addSystemMessage('Đã xóa lịch sử chat');
     }
 
-    // Utility methods
-    exportChat() {
-        const data = {
-            messages: this.messages,
-            timestamp: new Date().toISOString(),
-            agent: this.selectedAgent
-        };
+    /**
+     * Tạo animation cho status dot
+     * @param {string} type - Loại animation ('success', 'error', 'warning')
+     */
+    animateStatusDot(type) {
+        const statusDot = document.querySelector('.status-dot');
+        if (!statusDot) return;
         
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `polymind-chat-${Date.now()}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
+        // Xóa animation cũ
+        statusDot.classList.remove('animate-success', 'animate-error', 'animate-warning');
+        
+        // Thêm animation mới
+        statusDot.classList.add(`animate-${type}`);
+        
+        // Xóa class animation sau khi hoàn thành
+        setTimeout(() => {
+            statusDot.classList.remove(`animate-${type}`);
+        }, 600);
     }
 
-    getDebugInfo() {
-        return {
-            messagesCount: this.messages.length,
-            selectedAgent: this.selectedAgent,
-            isTyping: this.isTyping,
-            timestamp: new Date().toISOString()
-        };
+    /**
+     * Toggle sidebar visibility trên mobile
+     */    toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+        
+        if (!sidebar) return;
+        
+        sidebar.classList.toggle('open');
+        
+        // Tạo overlay nếu chưa có
+        if (!overlay) {
+            const newOverlay = document.createElement('div');
+            newOverlay.className = 'sidebar-overlay';
+            newOverlay.addEventListener('click', () => this.closeSidebar());
+            document.body.appendChild(newOverlay);
+        }
+        
+        // Toggle overlay
+        const currentOverlay = document.querySelector('.sidebar-overlay');
+        if (sidebar.classList.contains('open')) {
+            currentOverlay?.classList.add('show');
+            document.body.style.overflow = 'hidden'; // Prevent scroll
+        } else {
+            currentOverlay?.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+    }    /**
+     * Đóng sidebar
+     */
+    closeSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+        
+        sidebar?.classList.remove('open');
+        overlay?.classList.remove('show');
+        document.body.style.overflow = '';
     }
+
+    /**
+     * Setup sidebar event listeners
+     */
+    setupSidebar() {
+        // Mobile menu toggle button
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', () => this.toggleSidebar());
+        }        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            const sidebar = document.querySelector('.sidebar');
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            
+            if (window.innerWidth <= 768 && 
+                sidebar?.classList.contains('open') &&
+                !sidebar.contains(e.target) &&
+                e.target !== mobileMenuBtn &&
+                !mobileMenuBtn?.contains(e.target)) {
+                this.closeSidebar();
+            }
+        });
+
+        // Handle escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.closeSidebar();
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                this.closeSidebar();
+            }
+        });
+
+        // Setup chat history items
+        this.setupChatHistory();
+    }    /**
+     * Setup chat history functionality
+     */
+    setupChatHistory() {
+        const historyItems = document.querySelectorAll('.chat-item');
+        historyItems.forEach(item => {
+            // Click handler
+            item.addEventListener('click', (e) => {
+                this.handleChatItemSelection(e, item, historyItems);
+            });
+            
+            // Keyboard handler for accessibility
+            item.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    this.handleChatItemSelection(e, item, historyItems);
+                }
+            });
+        });
+    }
+
+    /**
+     * Handle chat item selection (click or keyboard)
+     */
+    handleChatItemSelection(e, item, historyItems) {
+        e.preventDefault();
+        
+        // Remove active class from all items
+        historyItems.forEach(i => i.classList.remove('active'));
+        
+        // Add active class to selected item
+        item.classList.add('active');
+        
+        // Load chat history (placeholder)
+        const chatId = item.dataset.chatId || item.querySelector('.chat-item-title')?.textContent || 'unknown';
+        this.loadChatHistory(chatId);
+        
+        // Close sidebar on mobile after selection
+        if (window.innerWidth <= 768) {
+            this.closeSidebar();
+        }
+    }
+
+    /**
+     * Load chat history (placeholder)
+     * @param {string} chatId - ID của chat cần load
+     */
+    loadChatHistory(chatId) {
+        // TODO: Implement actual chat history loading
+        console.log(`Loading chat history: ${chatId}`);
+        this.addSystemMessage(`Đã chuyển sang cuộc trò chuyện: ${chatId}`);
+    }
+
+    // ...existing code...
 }
 
 // Global functions for HTML onclick handlers

@@ -1,3 +1,6 @@
 {
+    "github.copilot.chat.codesearch.enabled": true,
+
+    "chat.mcp.enabled": true,
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv"
 }
