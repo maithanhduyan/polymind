@@ -112,50 +112,54 @@ class PolyMindChat {
         
         // Log cho debugging
         console.log(`🔌 Connection status: ${status} (${message})`);
-    }
-
-    setupEventListeners() {
+    }    setupEventListeners() {
         // Chat form submission
-        const chatForm = document.getElementById('chatForm');
-        chatForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.sendMessage();
-        });
-
-        // Textarea auto-resize and shortcuts
-        const chatInput = document.getElementById('chatInput');
-        chatInput.addEventListener('input', () => {
-            this.updateCharCount();
-            this.autoResizeTextarea();
-            this.updateSendButton();
-        });
-
-        chatInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+        const chatForm = document.getElementById('chat-form');
+        if (chatForm) {
+            chatForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 this.sendMessage();
-            }
-        });
+            });
+        }
 
-        // Send button
-        const sendButton = document.getElementById('sendButton');
-        sendButton.addEventListener('click', () => {
-            this.sendMessage();
-        });
-    }
+        // Textarea auto-resize and shortcuts
+        const chatInput = document.getElementById('chat-input');
+        if (chatInput) {
+            chatInput.addEventListener('input', () => {
+                this.updateCharCount();
+                this.autoResizeTextarea();
+                this.updateSendButton();
+            });
 
-    setupTextarea() {
-        const chatInput = document.getElementById('chatInput');
-        chatInput.style.height = 'auto';
-        this.updateSendButton();
-    }
+            chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.sendMessage();
+                }
+            });
+        }
 
-    setupAgentSelector() {
+        // Send button (using class selector since no ID)
+        const sendButton = document.querySelector('.send-btn');
+        if (sendButton) {
+            sendButton.addEventListener('click', () => {
+                this.sendMessage();
+            });
+        }
+    }    setupTextarea() {
+        const chatInput = document.getElementById('chat-input');
+        if (chatInput) {
+            chatInput.style.height = 'auto';
+            this.updateSendButton();
+        }
+    }    setupAgentSelector() {
         const agentSelector = document.getElementById('agentSelector');
-        agentSelector.addEventListener('change', (e) => {
-            this.selectedAgent = e.target.value;
-            this.addSystemMessage(`Đã chuyển sang ${e.target.options[e.target.selectedIndex].text}`);
-        });
+        if (agentSelector) {
+            agentSelector.addEventListener('change', (e) => {
+                this.selectedAgent = e.target.value;
+                this.addSystemMessage(`Đã chuyển sang ${e.target.options[e.target.selectedIndex].text}`);
+            });
+        }
     }
 
     updateWelcomeTime() {
@@ -163,11 +167,12 @@ class PolyMindChat {
         if (welcomeTime) {
             welcomeTime.textContent = new Date().toLocaleTimeString('vi-VN');
         }
-    }
-
-    updateCharCount() {
-        const chatInput = document.getElementById('chatInput');
+    }    updateCharCount() {
+        const chatInput = document.getElementById('chat-input');
         const charCount = document.getElementById('charCount');
+        
+        if (!chatInput || !charCount) return;
+        
         const currentLength = chatInput.value.length;
         const maxLength = parseInt(chatInput.getAttribute('maxlength')) || 2000;
         
@@ -181,25 +186,26 @@ class PolyMindChat {
         } else {
             charCount.style.color = 'var(--text-light)';
         }
-    }
-
-    autoResizeTextarea() {
-        const chatInput = document.getElementById('chatInput');
-        chatInput.style.height = 'auto';
-        chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
-    }
-
-    updateSendButton() {
-        const chatInput = document.getElementById('chatInput');
-        const sendButton = document.getElementById('sendButton');
+    }    autoResizeTextarea() {
+        const chatInput = document.getElementById('chat-input');
+        if (chatInput) {
+            chatInput.style.height = 'auto';
+            chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
+        }
+    }    updateSendButton() {
+        const chatInput = document.getElementById('chat-input');
+        const sendButton = document.querySelector('.send-btn');
+        
+        if (!chatInput || !sendButton) return;
+        
         const hasText = chatInput.value.trim().length > 0;
         
         sendButton.disabled = !hasText || this.isTyping;
     }    async sendMessage() {
-        const chatInput = document.getElementById('chatInput');
+        const chatInput = document.getElementById('chat-input');
         const message = chatInput.value.trim();
         
-        if (!message || this.isTyping) return;
+        if (!message || this.isTyping || !chatInput) return;
 
         // Check WebSocket connection
         if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
@@ -235,10 +241,10 @@ class PolyMindChat {
             this.hideTyping();
             this.addMessage('Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại.', 'ai', true);
         }
-    }
-
-    addMessage(content, sender, isError = false) {
-        const chatMessages = document.getElementById('chatMessages');
+    }    addMessage(content, sender, isError = false) {
+        const chatMessages = document.getElementById('chat-log');
+        if (!chatMessages) return;
+        
         const messageDiv = document.createElement('div');
         const timestamp = new Date().toLocaleTimeString('vi-VN');
         const messageId = 'msg_' + Date.now();
@@ -266,8 +272,12 @@ class PolyMindChat {
         `;
 
         // Insert before typing indicator
-        const typingIndicator = document.getElementById('typingIndicator');
-        chatMessages.insertBefore(messageDiv, typingIndicator);
+        const typingIndicator = document.getElementById('typing-indicator');
+        if (typingIndicator) {
+            chatMessages.insertBefore(messageDiv, typingIndicator);
+        } else {
+            chatMessages.appendChild(messageDiv);
+        }
 
         // Animate message appearance
         messageDiv.style.opacity = '0';
@@ -289,10 +299,10 @@ class PolyMindChat {
             timestamp: Date.now(),
             agent: this.selectedAgent
         });
-    }
-
-    addSystemMessage(content) {
-        const chatMessages = document.getElementById('chatMessages');
+    }    addSystemMessage(content) {
+        const chatMessages = document.getElementById('chat-log');
+        if (!chatMessages) return;
+        
         const messageDiv = document.createElement('div');
         
         messageDiv.innerHTML = `
@@ -303,8 +313,12 @@ class PolyMindChat {
             </div>
         `;
 
-        const typingIndicator = document.getElementById('typingIndicator');
-        chatMessages.insertBefore(messageDiv, typingIndicator);
+        const typingIndicator = document.getElementById('typing-indicator');
+        if (typingIndicator) {
+            chatMessages.insertBefore(messageDiv, typingIndicator);
+        } else {
+            chatMessages.appendChild(messageDiv);
+        }
         this.scrollToBottom();
     }
 
@@ -315,20 +329,22 @@ class PolyMindChat {
             .replace(/`([^`]+)`/g, '<code>$1</code>')
             .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
             .replace(/\*([^*]+)\*/g, '<em>$1</em>');
-    }
-
-    showTyping() {
+    }    showTyping() {
         this.isTyping = true;
-        const typingIndicator = document.getElementById('typingIndicator');
-        typingIndicator.style.display = 'flex';
+        const typingIndicator = document.getElementById('typing-indicator');
+        if (typingIndicator) {
+            typingIndicator.style.display = 'flex';
+        }
         this.updateSendButton();
         this.scrollToBottom();
     }
 
     hideTyping() {
         this.isTyping = false;
-        const typingIndicator = document.getElementById('typingIndicator');
-        typingIndicator.style.display = 'none';
+        const typingIndicator = document.getElementById('typing-indicator');
+        if (typingIndicator) {
+            typingIndicator.style.display = 'none';
+        }
         this.updateSendButton();
     }
 
@@ -369,15 +385,15 @@ class PolyMindChat {
         const randomResponse = agentResponses[Math.floor(Math.random() * agentResponses.length)];
         
         return randomResponse + '\n\nBạn có muốn tôi giải thích thêm chi tiết về vấn đề này không?';
-    }
-
-    scrollToBottom() {
-        const chatMessages = document.getElementById('chatMessages');
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    clearChat() {
-        const chatMessages = document.getElementById('chatMessages');
+    }    scrollToBottom() {
+        const chatMessages = document.getElementById('chat-log');
+        if (chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    }    clearChat() {
+        const chatMessages = document.getElementById('chat-log');
+        if (!chatMessages) return;
+        
         const messages = chatMessages.querySelectorAll('.message');
         
         messages.forEach(message => {
@@ -447,20 +463,20 @@ class PolyMindChat {
         sidebar?.classList.remove('open');
         overlay?.classList.remove('show');
         document.body.style.overflow = '';
-    }
-
-    /**
+    }    /**
      * Setup sidebar event listeners
      */
     setupSidebar() {
         // Mobile menu toggle button
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenuBtn = document.getElementById('mobile-menu-toggle');
         if (mobileMenuBtn) {
             mobileMenuBtn.addEventListener('click', () => this.toggleSidebar());
-        }        // Close sidebar when clicking outside on mobile
+        }
+
+        // Close sidebar when clicking outside on mobile
         document.addEventListener('click', (e) => {
             const sidebar = document.querySelector('.sidebar');
-            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mobileMenuBtn = document.getElementById('mobile-menu-toggle');
             
             if (window.innerWidth <= 768 && 
                 sidebar?.classList.contains('open') &&
@@ -487,7 +503,7 @@ class PolyMindChat {
 
         // Setup chat history items
         this.setupChatHistory();
-    }    /**
+    }/**
      * Setup chat history functionality
      */
     setupChatHistory() {
@@ -560,21 +576,21 @@ window.exportChat = function() {
 
 // Initialize chat when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    window.polymindChat = new PolyMindChat();
-    
-    // Add keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-        // Ctrl/Cmd + K to focus input
-        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-            e.preventDefault();
-            document.getElementById('chatInput').focus();
-        }
-        
-        // Escape to blur input
-        if (e.key === 'Escape') {
-            document.getElementById('chatInput').blur();
-        }
-    });
+    window.polymindChat = new PolyMindChat();        // Add keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + K to focus input
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                const chatInput = document.getElementById('chat-input');
+                if (chatInput) chatInput.focus();
+            }
+            
+            // Escape to blur input
+            if (e.key === 'Escape') {
+                const chatInput = document.getElementById('chat-input');
+                if (chatInput) chatInput.blur();
+            }
+        });
 });
 
 // Expose for debugging

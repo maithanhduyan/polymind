@@ -9,19 +9,38 @@ from src.services.health import router as health_router
 from src.agents.manager import agent_manager
 from src.agents import AgentType, AgentResponse
 from src.config import config
+from src.utils.logger import get_logger
 
 app = FastAPI(title="PolyMind App", description="Fast modern AI service framework")
+
+# Initialize logger
+logger = None
+
+async def get_app_logger():
+    """Get or initialize global logger for the application."""
+    global logger
+    if logger is None:
+        logger = await get_logger("polymind_main")
+        await logger.info("📝 Logger initialized for PolyMind main application")
+    return logger
 
 @app.on_event("startup")
 async def startup_event():
     """Setup agents khi khởi động app."""
-    print("🚀 Starting PolyMind...")
+    # Initialize logger first
+    app_logger = await get_app_logger()
+    
+    await app_logger.info("🚀 Starting PolyMind application...")
     
     # Kiểm tra environment variables
     if not config.check_required_env():
+        await app_logger.warning("⚠️  Some environment variables are missing. Some features may not work.")
         print("⚠️  Some environment variables are missing. Some features may not work.")
+    else:
+        await app_logger.info("✅ All required environment variables found")
     
     await agent_manager.setup_default_agents()
+    await app_logger.info("✅ Agent setup completed")
     print("✅ Agent setup completed")
 
 # WebSocket connection manager
@@ -32,9 +51,20 @@ class ConnectionManager:
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.append(websocket)
+        # Log connection
+        if logger:
+            await logger.info(f"🔌 New WebSocket connection established. Total connections: {len(self.active_connections)}")
 
     def disconnect(self, websocket: WebSocket):
         self.active_connections.remove(websocket)
+        # Log disconnection (using sync logging for simplicity in sync method)
+        if logger:
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+                loop.create_task(logger.info(f"🔌 WebSocket connection closed. Remaining connections: {len(self.active_connections)}"))
+            except:
+                pass  # Failsafe if no event loop
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
         await websocket.send_text(message)
@@ -98,6 +128,8 @@ async def get_agents_health():
 @app.websocket("/ws/chat")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
+    app_logger = await get_app_logger()
+    
     try:
         while True:
             data = await websocket.receive_text()
@@ -107,6 +139,9 @@ async def websocket_endpoint(websocket: WebSocket):
             user_message = message_data.get('content', '')
             agent_id = message_data.get('agent', 'deepseek')  # Default to deepseek
             is_streaming = message_data.get('streaming', False)
+            
+            # Log incoming message
+            await app_logger.info(f"💬 Received message for agent '{agent_id}' (streaming: {is_streaming}): {user_message[:100]}{'...' if len(user_message) > 100 else ''}")
             
             try:
                 if is_streaming:
@@ -127,14 +162,18 @@ async def websocket_endpoint(websocket: WebSocket):
                                 "content": chunk,
                                 "agent": agent_id
                             }), websocket)
-                        
-                        # Gửi final response
+                          # Gửi final response
                         await manager.send_personal_message(json.dumps({
                             "type": "ai_response",
                             "content": response_content,
                             "timestamp": datetime.now().isoformat(),
-                            "agent": agent_id                        }), websocket)
+                            "agent": agent_id                        
+                        }), websocket)
+                        
+                        # Log successful streaming response
+                        await app_logger.info(f"✅ Streaming response completed for agent '{agent_id}' - {len(response_content)} characters")
                     else:
+                        await app_logger.error(f"❌ Agent '{agent_id}' không khả dụng")
                         await manager.send_personal_message(json.dumps({
                             "type": "error",
                             "content": f"Agent '{agent_id}' không khả dụng",
@@ -151,8 +190,12 @@ async def websocket_endpoint(websocket: WebSocket):
                         "agent": agent_id,
                         "model": response.model_name
                     }), websocket)
+                      # Log successful regular response
+                    await app_logger.info(f"✅ Regular response completed for agent '{agent_id}' using model '{response.model_name}' - {len(response.content)} characters")
                     
             except Exception as e:
+                # Log error details
+                await app_logger.error(f"❌ Error processing message for agent '{agent_id}': {str(e)}")
                 # Gửi error response
                 await manager.send_personal_message(json.dumps({
                     "type": "error",
@@ -161,6 +204,10 @@ async def websocket_endpoint(websocket: WebSocket):
                 }), websocket)
             
     except WebSocketDisconnect:
+        await app_logger.info("🔌 WebSocket client disconnected")
+        manager.disconnect(websocket)
+    except Exception as e:
+        await app_logger.error(f"❌ WebSocket error: {str(e)}")
         manager.disconnect(websocket)
 
 

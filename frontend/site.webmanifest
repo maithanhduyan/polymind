@@ -1,0 +1,19 @@
+{
+  "name": "POLYMIND - The Global AI Chatbot",
+  "short_name": "POLYMIND",
+  "description": "Advanced AI chatbot with multiple specialized agents for different tasks",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+
+    
+  ],
+  "categories": ["productivity", "utilities", "business"],
+  "screenshots": [
+   
+   
+  ]
+}

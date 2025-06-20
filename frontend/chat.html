@@ -1,9 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
+  <head>    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>POLYMIND - The Global AI Chatbot</title>
+    <title>POLYMIND - The Global AI Chatbot</title>    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <link rel="manifest" href="/static/site.webmanifest" />    <meta name="theme-color" content="#3b82f6" />
+    
+    <!-- SEO and Social Meta Tags -->
+    <meta name="description" content="POLYMIND - Advanced AI chatbot platform with multiple specialized agents for coding, analysis, creative writing, and general assistance." />
+    <meta name="keywords" content="AI, chatbot, artificial intelligence, machine learning, coding assistant, data analysis, creative writing" />
+    <meta name="author" content="POLYMIND Team" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://polymind.ai/" />
+    <meta property="og:title" content="POLYMIND - The Global AI Chatbot" />
+    <meta property="og:description" content="Advanced AI chatbot platform with multiple specialized agents for coding, analysis, creative writing, and general assistance." />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://polymind.ai/" />
+    <meta property="twitter:title" content="POLYMIND - The Global AI Chatbot" />
+    <meta property="twitter:description" content="Advanced AI chatbot platform with multiple specialized agents for coding, analysis, creative writing, and general assistance." />
+    
+    <!-- Inline SVG Favicon as fallback -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='grad' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' style='stop-color:%233b82f6;stop-opacity:1' /><stop offset='100%' style='stop-color:%236366f1;stop-opacity:1' /></linearGradient></defs><rect width='32' height='32' rx='8' fill='url(%23grad)'/><path d='M16 6c-1.5 0-2.8.6-3.8 1.6-.4-.2-.9-.3-1.4-.3-1.7 0-3 1.3-3 3 0 .5.1 1 .3 1.4C6.6 12.2 6 13.5 6 15c0 1.1.3 2.1.8 3-.5.9-.8 1.9-.8 3 0 1.5.6 2.8 1.6 3.8-.2.4-.3.9-.3 1.4 0 1.7 1.3 3 3 3 .5 0 1-.1 1.4-.3C12.2 25.4 13.5 26 15 26h2c1.5 0 2.8-.6 3.8-1.6.4.2.9.3 1.4.3 1.7 0 3-1.3 3-3 0-.5-.1-1-.3-1.4.9-1 1.6-2.3 1.6-3.8 0-1.1-.3-2.1-.8-3 .5-.9.8-1.9.8-3 0-1.5-.6-2.8-1.6-3.8.2-.4.3-.9.3-1.4 0-1.7-1.3-3-3-3-.5 0-1 .1-1.4.3C18.8 6.6 17.5 6 16 6z' fill='white' opacity='0.9'/><circle cx='12' cy='12' r='1.5' fill='white'/><circle cx='20' cy='12' r='1.5' fill='white'/><circle cx='16' cy='16' r='1.5' fill='white'/><circle cx='12' cy='20' r='1.5' fill='white'/><circle cx='20' cy='20' r='1.5' fill='white'/></svg>" type="image/svg+xml" />
 
     <!-- Import Font Awesome for Icons -->
     <link
@@ -13,850 +34,13 @@
 
     <!-- Import Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />    <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
 
-    <style>
-      /* --- 1. CSS Variables & Global Styles --- */
-      :root {
-        /* Dark Theme (Default) */
-        --bg-dark-primary: #0f172a; /* Main background */
-        --bg-dark-secondary: #1e293b; /* Panel backgrounds (sidebar, input, header) */
-        --bg-dark-tertiary: #334155; /* Message bubbles, hover states */
-        --text-light-primary: #f8fafc;
-        --text-light-secondary: #94a3b8;
-        --accent-primary: #3b82f6; /* Main brand color */
-        --accent-primary-hover: #2563eb;
-        --border-color: #334155;
-        --success-color: #10b981; /* For capabilities */
-        --user-bubble-bg: #3b82f6; /* User message bubble */
-        --user-bubble-text: #ffffff;
-
-        /* Light Theme (Toggleable) */
-        --light-bg-primary: #ffffff;
-        --light-bg-secondary: #f1f5f9;
-        --light-bg-tertiary: #e2e8f0;
-        --light-text-primary: #1e293b;
-        --light-text-secondary: #64748b;
-        --light-accent-primary: #3b82f6;
-        --light-accent-primary-hover: #2563eb;
-        --light-border-color: #cbd5e1;
-        --light-user-bubble-bg: #3b82f6;
-        --light-user-bubble-text: #ffffff;
-
-        /* Font & Spacing */
-        --font-main: "Inter", sans-serif;
-        --radius-sm: 4px;
-        --radius-md: 8px;
-        --radius-lg: 12px;
-        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-        --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-        --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-
-      /* Apply theme variables based on data-theme attribute */
-      body[data-theme="dark"] {
-        --bg-primary: var(--bg-dark-primary);
-        --bg-secondary: var(--bg-dark-secondary);
-        --bg-tertiary: var(--bg-dark-tertiary);
-        --text-primary: var(--text-light-primary);
-        --text-secondary: var(--text-light-secondary);
-        --accent-primary: var(--accent-primary);
-        --accent-primary-hover: var(--accent-primary-hover);
-        --border-color: var(--border-color);
-        --user-bubble-bg: var(--user-bubble-bg);
-        --user-bubble-text: var(--user-bubble-text);
-      }
-
-      body[data-theme="light"] {
-        --bg-primary: var(--light-bg-primary);
-        --bg-secondary: var(--light-bg-secondary);
-        --bg-tertiary: var(--light-bg-tertiary);
-        --text-primary: var(--light-text-primary);
-        --text-secondary: var(--light-text-secondary);
-        --accent-primary: var(--light-accent-primary);
-        --accent-primary-hover: var(--light-accent-primary-hover);
-        --border-color: var(--light-border-color);
-        --user-bubble-bg: var(--light-user-bubble-bg);
-        --user-bubble-text: var(--light-user-bubble-text);
-      }
-
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      html,
-      body {
-        height: 100%;
-        overflow: hidden; /* Prevent body scroll, let specific divs handle it */
-        font-family: var(--font-main);
-        background-color: var(--bg-primary);
-        color: var(--text-primary);
-        font-size: 15px;
-        line-height: 1.5;
-        transition: background-color var(--transition), color var(--transition);
-      }
-
-      /* --- Custom Scrollbar --- */
-      ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: var(--text-secondary); /* Darker thumb */
-        border-radius: 3px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: var(--accent-primary); /* Lighter on hover */
-      }
-
-      /* --- Buttons & Inputs General Styles --- */
-      button {
-        cursor: pointer;
-        border: none;
-        background: none;
-        color: var(--text-secondary);
-        padding: 8px;
-        border-radius: var(--radius-sm);
-        transition: var(--transition);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      button:hover {
-        color: var(--text-primary);
-        background-color: var(--bg-tertiary);
-      }
-
-      /* --- 2. Main Workspace Layout (Mobile First) --- */
-      .polymind-workspace {
-        display: flex;
-        height: 100vh;
-        width: 100vw;
-        position: relative;
-      }
-
-      /* --- Sidebar --- */
-      .sidebar {
-        width: 260px;
-        background-color: var(--bg-secondary);
-        border-right: 1px solid var(--border-color);
-        display: flex;
-        flex-direction: column;
-        padding: 16px;
-        transition: transform 0.3s ease-in-out;
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 100%;
-        z-index: 100;
-        transform: translateX(-100%); /* Hidden by default on mobile */
-      }
-
-      .polymind-workspace.sidebar-open .sidebar {
-        transform: translateX(0);
-      }
-
-      .sidebar-overlay {
-        display: none;
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(2px);
-        z-index: 99;
-      }
-
-      .polymind-workspace.sidebar-open .sidebar-overlay {
-        display: block;
-      }
-
-      /* --- Chat Interface --- */
-      .chat-interface {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        background-color: var(--bg-primary);
-      }
-
-      /* --- Context Panel --- */
-      .context-panel {
-        display: none; /* Hidden by default on mobile */
-        width: 300px;
-        background-color: var(--bg-secondary);
-        border-left: 1px solid var(--border-color);
-        padding: 20px;
-        flex-direction: column;
-      }
-
-      /* --- 3. Sidebar Components --- */
-      .sidebar-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 24px;
-        padding: 8px 0;
-      }
-
-      .sidebar-header .logo {
-        font-size: 18px;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: var(--text-primary);
-      }
-
-      .sidebar-header .logo i {
-        color: var(--accent-primary);
-      }
-
-      .sidebar-header .close-sidebar-btn {
-        display: block; /* Show on mobile */
-        color: var(--text-secondary);
-        font-size: 20px;
-        padding: 4px;
-      }
-
-      .new-chat-btn {
-        width: 100%;
-        padding: 10px 16px;
-        background-color: var(--accent-primary);
-        color: white;
-        border: none;
-        border-radius: var(--radius-md);
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: var(--transition);
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-      }
-
-      .new-chat-btn:hover {
-        background-color: var(--accent-primary-hover);
-        box-shadow: var(--shadow-sm);
-      }
-
-      .sidebar-section {
-        margin-bottom: 20px;
-      }
-
-      .sidebar-section-title {
-        font-size: 12px;
-        font-weight: 600;
-        text-transform: uppercase;
-        color: var(--text-secondary);
-        padding: 8px 0;
-        margin-bottom: 8px;
-        letter-spacing: 0.5px;
-      }
-
-      .nav-list {
-        list-style: none;
-        max-height: 25vh; /* Limit height for scroll */
-        overflow-y: auto;
-        margin-bottom: 8px; /* Spacing between lists if multiple */
-      }
-
-      .nav-list li a {
-        display: flex;
-        align-items: center;
-        padding: 10px 12px;
-        color: var(--text-primary);
-        text-decoration: none;
-        border-radius: var(--radius-sm);
-        transition: var(--transition);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        font-size: 14px;
-        gap: 12px;
-      }
-
-      .nav-list li a:hover {
-        background-color: var(--bg-tertiary);
-      }
-
-      .nav-list li a.active {
-        background-color: var(--accent-primary);
-        color: white;
-      }
-
-      .nav-list li a i {
-        color: var(--text-secondary); /* Default icon color */
-        width: 18px;
-        text-align: center;
-      }
-
-      .nav-list li a.active i {
-        color: white; /* Active icon color */
-      }
-
-      .sidebar-footer {
-        margin-top: auto; /* Push to bottom */
-        border-top: 1px solid var(--border-color);
-        padding-top: 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .user-profile {
-        display: flex;
-        align-items: center;
-        padding: 8px;
-        border-radius: var(--radius-sm);
-        transition: var(--transition);
-        gap: 12px;
-      }
-
-      .user-profile:hover {
-        background-color: var(--bg-tertiary);
-      }
-
-      .user-profile img {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        object-fit: cover;
-      }
-
-      .user-info {
-        display: flex;
-        flex-direction: column;
-      }
-
-      .user-info .name {
-        font-weight: 500;
-        font-size: 14px;
-      }
-
-      .user-info .role {
-        font-size: 12px;
-        color: var(--text-secondary);
-      }
-
-      .global-settings {
-        display: flex;
-        gap: 8px;
-      }
-
-      .global-settings button {
-        flex-grow: 1;
-        padding: 10px 12px;
-        font-size: 14px;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        color: var(--text-primary);
-        background-color: var(--bg-tertiary);
-        border-radius: var(--radius-md);
-      }
-      .global-settings button:hover {
-        background-color: var(--accent-primary);
-        color: white;
-      }
-      .global-settings button:hover i {
-        color: white;
-      }
-      .global-settings button i {
-        color: var(--text-secondary);
-        transition: var(--transition);
-      }
-
-      /* --- 4. Chat Interface Components --- */
-      .chat-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 16px;
-        border-bottom: 1px solid var(--border-color);
-        background-color: var(--bg-secondary);
-        position: sticky;
-        top: 0;
-        z-index: 50;
-      }
-
-      .chat-header-left {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-
-      .chat-header-title {
-        display: flex;
-        align-items: center;
-        font-size: 15px;
-        font-weight: 500;
-        gap: 12px;
-      }
-
-      .chat-header-title i {
-        color: var(--accent-primary);
-      }
-
-      .mobile-menu-toggle {
-        display: block; /* Show on mobile */
-        background: none;
-        border: none;
-        color: var(--text-secondary);
-        font-size: 18px;
-        cursor: pointer;
-        padding: 8px;
-        transition: var(--transition);
-      }
-
-      .mobile-menu-toggle:hover {
-        color: var(--text-primary);
-      }
-
-      .chat-header-actions {
-        display: flex;
-        gap: 8px;
-      }
-
-      .chat-log {
-        flex-grow: 1;
-        overflow-y: auto;
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-      }
-
-      .chat-message {
-        display: flex;
-        gap: 12px;
-        max-width: 90%;
-        animation: fadeIn 0.3s ease-out;
-      }
-
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      .chat-message .avatar {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 500;
-        flex-shrink: 0;
-        color: white;
-        font-size: 14px;
-      }
-
-      .chat-message.user .avatar {
-        background-color: var(--bg-tertiary);
-        color: var(--text-primary);
-      }
-
-      .chat-message.ai .avatar {
-        background-color: var(--accent-primary);
-      }
-
-      .message-content {
-        background-color: var(--bg-tertiary);
-        padding: 12px 16px;
-        border-radius: var(--radius-md);
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        max-width: 100%; /* Ensure content doesn't overflow */
-      }
-
-      .message-content p {
-        white-space: pre-wrap; /* Preserve formatting */
-        word-break: break-word; /* Break long words */
-      }
-
-      .message-actions {
-        display: flex;
-        gap: 8px;
-        margin-top: 8px;
-        font-size: 12px;
-      }
-      .message-actions button {
-        font-size: 12px;
-        padding: 4px 8px;
-        color: var(--text-secondary);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-sm);
-        background-color: transparent;
-      }
-      .message-actions button:hover {
-        background-color: var(--accent-primary);
-        color: white;
-        border-color: var(--accent-primary);
-      }
-
-      .message-meta {
-        font-size: 12px;
-        color: var(--text-secondary);
-        margin-top: 4px;
-      }
-
-      .chat-message.user {
-        align-self: flex-end;
-        flex-direction: row-reverse;
-      }
-
-      .chat-message.user .message-content {
-        background-color: var(--user-bubble-bg);
-        color: var(--user-bubble-text);
-      }
-
-      .chat-message.user .message-meta {
-        color: rgba(255, 255, 255, 0.7);
-      }
-
-      .typing-indicator {
-        display: flex;
-        align-items: center;
-        padding: 12px 16px;
-        gap: 8px;
-      }
-
-      .typing-indicator span {
-        height: 6px;
-        width: 6px;
-        background-color: var(--text-secondary);
-        border-radius: 50%;
-        display: inline-block;
-        animation: bounce 1.4s infinite ease-in-out both;
-      }
-
-      .typing-indicator span:nth-child(1) {
-        animation-delay: -0.32s;
-      }
-      .typing-indicator span:nth-child(2) {
-        animation-delay: -0.16s;
-      }
-
-      @keyframes bounce {
-        0%,
-        80%,
-        100% {
-          transform: scale(0);
-        }
-        40% {
-          transform: scale(1);
-        }
-      }
-
-      .chat-input-area {
-        padding: 16px;
-        border-top: 1px solid var(--border-color);
-        background-color: var(--bg-secondary);
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        position: sticky;
-        bottom: 0;
-        z-index: 50;
-      }
-
-      .quick-reply-suggestions {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-      .quick-reply-suggestions button {
-        padding: 8px 12px;
-        border-radius: var(--radius-md);
-        background-color: var(--bg-tertiary);
-        color: var(--text-primary);
-        font-size: 14px;
-        flex-shrink: 0;
-      }
-      .quick-reply-suggestions button:hover {
-        background-color: var(--accent-primary);
-        color: white;
-      }
-
-      .chat-input-form {
-        display: flex;
-        align-items: flex-end;
-        background-color: var(--bg-tertiary);
-        border-radius: var(--radius-md);
-        padding: 8px;
-        border: 1px solid var(--border-color);
-        transition: var(--transition);
-      }
-
-      .chat-input-form:focus-within {
-        border-color: var(--accent-primary);
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-      }
-
-      .chat-input-form textarea {
-        flex-grow: 1;
-        border: none;
-        background: none;
-        color: var(--text-primary);
-        font-size: 14px;
-        resize: none;
-        max-height: 150px;
-        line-height: 1.5;
-        padding: 8px;
-        font-family: var(--font-main);
-        outline: none;
-        min-height: 24px;
-      }
-
-      .chat-input-form textarea::placeholder {
-        color: var(--text-secondary);
-      }
-
-      .input-actions {
-        display: flex;
-        gap: 4px;
-        align-items: flex-end;
-      }
-
-      .input-actions button {
-        padding: 8px;
-      }
-
-      .send-btn {
-        background-color: var(--accent-primary) !important;
-        color: white !important;
-      }
-
-      .send-btn:hover {
-        background-color: var(--accent-primary-hover) !important;
-      }
-
-      .quick-tip {
-        font-size: 12px;
-        color: var(--text-secondary);
-        text-align: center;
-        margin-top: -8px; /* Pull it closer to input */
-      }
-
-      /* --- 5. Context Panel (Desktop) --- */
-      .context-header {
-        font-size: 15px;
-        font-weight: 500;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        color: var(--text-primary);
-      }
-
-      .context-header i {
-        color: var(--accent-primary);
-      }
-
-      .context-content .placeholder {
-        text-align: center;
-        color: var(--text-secondary);
-        padding: 40px 0;
-        font-size: 14px;
-      }
-
-      .agent-details {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-
-      .agent-details .detail-item {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-
-      .agent-details .detail-item strong {
-        color: var(--text-secondary);
-        font-size: 12px;
-        font-weight: 500;
-      }
-
-      .agent-details .detail-item p {
-        background-color: var(--bg-tertiary);
-        padding: 12px;
-        border-radius: var(--radius-md);
-        font-size: 14px;
-      }
-
-      .agent-details .capabilities-list {
-        list-style: none;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .agent-details .capabilities-list li {
-        background-color: var(--bg-tertiary);
-        padding: 12px;
-        border-radius: var(--radius-md);
-        font-size: 14px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .agent-details .capabilities-list li i {
-        color: var(--success-color);
-      }
-
-      /* --- Welcome Carousel (Initial Load) --- */
-      .welcome-carousel {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: var(--bg-primary);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        z-index: 200; /* Above everything */
-        transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-        opacity: 1;
-        transform: translateY(0);
-      }
-
-      .welcome-carousel.hidden {
-        opacity: 0;
-        transform: translateY(-100%);
-        pointer-events: none;
-      }
-
-      .carousel-content {
-        text-align: center;
-        max-width: 500px;
-        margin-bottom: 40px;
-      }
-
-      .carousel-content i {
-        font-size: 60px;
-        color: var(--accent-primary);
-        margin-bottom: 20px;
-      }
-
-      .carousel-content h2 {
-        font-size: 28px;
-        font-weight: 700;
-        margin-bottom: 15px;
-        color: var(--text-primary);
-      }
-
-      .carousel-content p {
-        font-size: 16px;
-        color: var(--text-secondary);
-        line-height: 1.6;
-      }
-
-      .carousel-pagination {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 30px;
-      }
-      .carousel-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background-color: var(--text-secondary);
-        opacity: 0.5;
-        transition: var(--transition);
-        cursor: pointer;
-      }
-      .carousel-dot.active {
-        background-color: var(--accent-primary);
-        opacity: 1;
-        width: 25px;
-        border-radius: var(--radius-md);
-      }
-
-      .start-chat-btn {
-        padding: 14px 28px;
-        background-color: var(--accent-primary);
-        color: white;
-        border: none;
-        border-radius: var(--radius-lg);
-        font-size: 16px;
-        font-weight: 600;
-        transition: var(--transition);
-      }
-      .start-chat-btn:hover {
-        background-color: var(--accent-primary-hover);
-        box-shadow: var(--shadow-md);
-      }
-
-      /* --- 6. Responsive Breakpoints --- */
-      /* Tablet and larger */
-      @media (min-width: 768px) {
-        .sidebar {
-          position: static;
-          transform: translateX(0);
-        }
-
-        .mobile-menu-toggle {
-          display: none;
-        }
-
-        .sidebar-header .close-sidebar-btn {
-          display: none; /* Hide on larger screens */
-        }
-
-        .polymind-workspace.sidebar-open .sidebar-overlay {
-          display: none;
-        }
-
-        .chat-message {
-          max-width: 80%;
-        }
-      }
-
-      /* Desktop and larger */
-      @media (min-width: 1200px) {
-        .polymind-workspace {
-          display: grid;
-          grid-template-columns: 260px 1fr 300px; /* Sidebar, Chat, Context Panel */
-        }
-
-        .context-panel {
-          display: flex; /* Show on desktop */
-        }
-
-        .chat-message {
-          max-width: 70%; /* Give more space for chat */
-        }
-      }
-    </style>
+    <!-- Import Chat Styles -->
+    <link rel="stylesheet" href="/static/chat.css" />
   </head>
   <body data-theme="dark">
     <!-- Welcome Carousel (Initial Onboarding) -->
@@ -898,7 +82,18 @@
 
         <button class="new-chat-btn">
           <i class="fas fa-plus"></i> New Chat
-        </button>
+        </button>        <!-- Agent Selector -->
+        <div class="sidebar-section">
+          <h3 class="sidebar-section-title">Active Agent</h3>
+          <div class="agent-selector-wrapper">
+            <select id="agentSelector" class="agent-selector">
+              <option value="general">General Assistant</option>
+              <option value="coding">Coding Expert</option>
+              <option value="analysis">Data Analyst</option>
+              <option value="creative">Creative Writer</option>
+            </select>
+          </div>
+        </div>
 
         <div class="sidebar-section">
           <h3 class="sidebar-section-title">Conversations</h3>
@@ -986,8 +181,7 @@
 
       <!-- ===== 2. CHAT INTERFACE ===== -->
       <main class="chat-interface">
-        <header class="chat-header">
-          <div class="chat-header-left">
+        <header class="chat-header">          <div class="chat-header-left">
             <button
               class="mobile-menu-toggle"
               id="mobile-menu-toggle"
@@ -999,6 +193,16 @@
               <i class="fas fa-chess-king"></i>
               <span>Chat with Strategos</span>
             </div>
+            <!-- Connection Status -->
+            <div class="connection-status connected" 
+                 id="connectionStatus" 
+                 role="status" 
+                 aria-live="polite"
+                 aria-label="Connection status"
+                 data-status="connected">
+              <span class="status-dot" aria-hidden="true"></span>
+              <span class="status-text" id="statusText">Đã kết nối</span>
+            </div>
           </div>
           <div class="chat-header-actions">
             <button title="Agent Info">
@@ -1009,8 +213,7 @@
           </div>
         </header>
 
-        <div class="chat-log" id="chat-log">
-          <!-- AI Welcome Message -->
+        <div class="chat-log" id="chat-log">          <!-- AI Welcome Message -->
           <div class="chat-message ai">
             <div class="avatar"><i class="fas fa-robot"></i></div>
             <div class="message-content">
@@ -1018,7 +221,7 @@
                 Strategos ready for commands. How can I assist with your
                 mission?
               </p>
-              <span class="message-meta">Strategos • Just now</span>
+              <span class="message-meta">Strategos • <span id="welcomeTime">--:--:--</span></span>
             </div>
           </div>
 
@@ -1079,8 +282,10 @@
               <button type="submit" class="send-btn" title="Send (Enter)">
                 <i class="fas fa-paper-plane"></i>
               </button>
-            </div>
-          </form>
+            </div>          </form>
+          <div class="input-footer">
+            <div class="char-count" id="charCount">0/2000</div>
+          </div>
           <div class="quick-tip">
             Quick Tip: Type <kbd>@</kbd> to call a command or <kbd>/</kbd> to
             see command list.
@@ -1563,6 +768,6 @@
         }
       });
     </script>
-    <script src="chat.js"></script>
+    <script src="/static/chat.js"></script>
   </body>
 </html>
