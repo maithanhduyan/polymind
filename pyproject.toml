@@ -14,7 +14,8 @@ dependencies = [
     "typer",            # CLI optional
     "rich",             # Logging đẹp
     "psutil",           # Process management
-    "chromadb"          # Vector database
+    "chromadb",         # Vector database
+    "qdrant-client",    # Vector database
 ]
 
 [project.scripts]

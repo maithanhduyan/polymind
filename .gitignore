@@ -1,6 +1,9 @@
 # ChromaDB
 chroma_data/
 
+# Qdrant
+qdrant_persistent_data/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
