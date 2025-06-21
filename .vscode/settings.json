@@ -70,25 +70,30 @@
     "html.autoClosingTags": false,
     "html.completion.attributeDefaultValue": "empty",
     "editor.formatOnSave": false,
-    "prettier.enable": false,
+    "prettier.enable": true,
     "[javascript]": {
         "editor.formatOnSave": true,
         "editor.defaultFormatter": null
     },
+    "typescript.preferences.includePackageJsonAutoImports": "on",
+    "eslint.validate": [
+        "typescript",
+        "javascript"
+    ],
     "[typescript]": {
         "editor.formatOnSave": true,
-        "editor.defaultFormatter":"vscode.typescript-language-features"
+        "editor.defaultFormatter": "vscode.typescript-language-features"
     },
     "[html]": {
-        "editor.formatOnSave": false,
+        "editor.formatOnSave": true,
         "editor.defaultFormatter": null
     },
     "[css]": {
-        "editor.formatOnSave": false,
+        "editor.formatOnSave": true,
         "editor.defaultFormatter": null
     },
     "[json]": {
-        "editor.formatOnSave": false,
+        "editor.formatOnSave": true,
         "editor.defaultFormatter": null
     },
     // 
@@ -96,6 +101,7 @@
     // 
     "[jsonc]": {
         "editor.defaultFormatter": "vscode.json-language-features",
+        "editor.formatOnSave": true,
         "editor.quickSuggestions": {
             "strings": true
         },
