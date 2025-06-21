@@ -4,26 +4,28 @@ services:
     container_name: postgresql
     image: postgres:17
     ports:
-      - "5432:5432"
+      - "5432:5432"    
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres#2025
       POSTGRES_DB: postgres
     volumes:
       - ./postgres/data:/var/lib/postgresql/data
-    restart: always # run as a service
+    restart: always # run as a service    
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U odoo"]
       interval: 30s
       timeout: 10s
       retries: 5
+      
   ollama:
-    container_name: ollama
+    container_name: ollama    
     image: ollama/ollama:latest
     ports:
-      - "11434:11434"
+      - "11434:11434"    
     volumes:
-      - ollama_data:/root/.ollama
+      - ./ollama/data:/root/.ollama
+      - ./ollama/init-ollama.sh:/usr/local/bin/init-ollama.sh:ro
     restart: always
     environment:
       - OLLAMA_KEEP_ALIVE=24h
@@ -34,6 +36,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 120s
+    entrypoint: ["/bin/bash", "/usr/local/bin/init-ollama.sh"]
       
   chromadb:
     container_name: chromadb  
@@ -44,7 +47,7 @@ services:
       - ./chromadb:/data
     environment:
       - CHROMA_SERVER_HOST=0.0.0.0
-      - CHROMA_SERVER_HTTP_PORT=8000
+      - CHROMA_SERVER_HTTP_PORT=8000    
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
@@ -96,6 +99,13 @@ services:
 # curl http://localhost:11434/api/tags             # Check Ollama API
 # curl http://localhost:8000/api/v1/heartbeat     # Check ChromaDB API
 
+# 🤖 Ollama Model Management
+# docker compose exec ollama ollama pull nomic-embed-text    # Pull embedding model
+# docker compose exec ollama ollama pull llama3.2:1b        # Pull small LLM model  
+# docker compose exec ollama ollama list                     # List installed models
+# docker compose exec ollama ollama show nomic-embed-text   # Show model details
+# docker compose exec ollama ollama rm nomic-embed-text     # Remove model
+
 # 📊 Container Management
 # docker compose top                              # Show running processes
 # docker compose stats                            # Show resource usage
@@ -114,6 +124,3 @@ services:
 # docker compose logs -f ollama                   # 4. Monitor Ollama model download
 
 # Named volumes for data persistence
-volumes:
-  ollama_data:
-    driver: local
