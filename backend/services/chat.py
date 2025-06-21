@@ -1,7 +1,7 @@
 # backend/services/health.py
 from fastapi import APIRouter
 
-router = APIRouter(prefix="/health", tags=["health"])
+router = APIRouter(prefix="/chat", tags=["chat"])
 
 
 @router.get("/")

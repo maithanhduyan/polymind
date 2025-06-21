@@ -14,7 +14,7 @@ applyTo: '**/*.py'
 
 ## Code Quality
 
-- Write docstrings for all classes and functions
+- Write docstrings for all classes and functions (English/Vietnamese)
 - Use f-strings for string formatting
 - Prefer pathlib over os.path for file operations
 - Handle exceptions gracefully with specific exception types
@@ -28,7 +28,6 @@ applyTo: '**/*.py'
 - Always test code after making changes
 - Prioritize code readability and maintainability
 - Suggest performance optimizations when relevant
-- Use Vietnamese comments when requested by user
 
 ## Error Prevention Workflow
 

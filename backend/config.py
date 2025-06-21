@@ -3,8 +3,16 @@
 Configuration management for PolyMind project.
 """
 
+from math import log
 import os
 from typing import Optional
+from venv import logger
+from dotenv import load_dotenv
+from backend.utils.logger import get_async_logger
+
+logger = get_async_logger(__name__)
+# Load environment variables from .env file
+load_dotenv()
 
 
 class Config:
@@ -18,6 +26,11 @@ class Config:
     DEEPSEEK_MODEL: str = "deepseek-ai/DeepSeek-V3"
     DEEPSEEK_MAX_TOKENS: int = 4000
     DEEPSEEK_TEMPERATURE: float = 0.7
+
+    # Llama 3 model configuration
+    LLAMA3_MODEL: str = "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
+    LLAMA3_MAX_TOKENS: int = 4096
+    LLAMA3_TEMPERATURE: float = 0.7
 
     # Application settings
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"

@@ -1,3 +1,4 @@
+from math import log
 import sys
 import os
 import json
@@ -7,20 +8,14 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from backend.services.health import router as health_router
-from backend.agents.manager import agent_manager
 from backend.config import config
-from backend.core import lifecycle_manager, lifespan
 from backend.utils.logger import get_async_logger, get_logging_config
 from backend.websocket import ws_connection_manager
 from fastapi.middleware.cors import CORSMiddleware
 
 logger = get_async_logger(__name__)
 
-app = FastAPI(
-    title="PolyMind App",
-    description="Fast modern AI service framework",
-    lifespan=lifespan,
-)
+app = FastAPI(title="PolyMind App", description="Fast modern AI service framework")
 
 # Cấu hình CORS (cho phép tất cả nguồn trong ví dụ này)
 app.add_middleware(
@@ -105,13 +100,6 @@ async def websocket_endpoint(websocket: WebSocket):
         await websocket.close()
 
 
-# Handle Chrome DevTools request to avoid 404
-@app.get("/.well-known/appspecific/com.chrome.devtools.json")
-async def chrome_devtools_config():
-    """Handle Chrome DevTools configuration request to avoid 404."""
-    return {"status": "not_configured"}
-
-
 # Mount static files
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
@@ -124,6 +112,13 @@ app.include_router(health_router)
 async def serve_frontend():
     """Serve the main frontend page."""
     return FileResponse("frontend/index.html")
+
+
+# Handle Chrome DevTools request to avoid 404
+@app.get("/.well-known/appspecific/com.chrome.devtools.json")
+async def chrome_devtools_config():
+    """Handle Chrome DevTools configuration request to avoid 404."""
+    return {"status": "not_configured"}
 
 
 @app.get("/chat")
@@ -141,62 +136,28 @@ async def api_root():
 @app.get("/api/chat/agents")
 async def get_chat_agents():
     """Get available chat agents."""
-    agents = []
-    for agent_id, agent_instance in agent_manager.agents.items():
-        agent_info = agent_instance.info
-        agents.append(
-            {
-                "id": agent_id,
-                "name": agent_info["name"],
-                "description": agent_info["description"],
-                "type": agent_info["type"],
-                "conversation_length": agent_info.get("conversation_length", 0),
-            }
-        )
-
-    return {"agents": agents}
+    # Hiện tại chưa có agents, trả về thông báo tạm thời
+    return {"agents": "comming soon"}
 
 
 @app.get("/api/chat/agents/health")
 async def get_agents_health():
     """Kiểm tra health của tất cả agents."""
-    return await agent_manager.health_check()
+    return {}
 
 
 def main() -> None:
     """Entry point để chạy development server."""
     import uvicorn
 
-    try:
-        logger.info(f"🚀 Starting server at {config.HOST}:{config.PORT}")
-        logger.info(f"🔧 Debug mode: {'ON' if config.DEBUG else 'OFF'}")
-
-        uvicorn.run(
-            "backend.main:app",
-            host=config.HOST,
-            port=config.PORT,
-            reload=config.DEBUG,
-            log_config=get_logging_config(),
-            # Tối ưu cho WebSocket
-            ws_ping_interval=20,
-            ws_ping_timeout=30,
-            timeout_keep_alive=5,
-        )
-    except KeyboardInterrupt:
-        logger.info("\n🛑 Server shutdown requested by user")
-    except Exception as e:
-        logger.error(f"💥 Server startup failed: {e}")
-        logger.exception("Server startup error details:")
-        sys.exit(1)
-    finally:
-        logger.info("🔚 PolyMind server stopped")
+    uvicorn.run(
+        "backend.main:app",
+        host=config.HOST,
+        port=config.PORT,
+        reload=config.DEBUG,
+        log_config=get_logging_config(),
+    )
 
 
 if __name__ == "__main__":
-    # logger = get_async_logger("server_main")
-    try:
-        logger.info("🚀 Starting PolyMind server in development mode")
-        main()
-    except Exception as e:
-        logger.exception("💥 Critical error in main thread")
-        sys.exit(1)
+    main()
