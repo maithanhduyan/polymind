@@ -311,7 +311,8 @@ export class PostgreSQLService implements Service {
                     text: `PostgreSQL Server Information:\n\n${versionResult.rows[0].version}\n\nKey Settings:\n${settingsResult.rows.map(setting =>
                         `- ${setting.name}: ${setting.setting}${setting.unit || ''} (${setting.short_desc})`
                     ).join('\n')}`
-                }]            };
+                }]
+            };
         } catch (error) {
             throw new Error(`Failed to get server info: ${error instanceof Error ? error.message : 'Unknown error'}`);
         } finally {
