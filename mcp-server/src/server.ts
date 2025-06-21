@@ -15,7 +15,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { URL } from 'url';
-import { Service, TimeService, CalculatorService } from './services/index.js';
+import { Service, TimeService, CalculatorService, PostgreSQLService } from './services/index.js';
 
 /**
  * Service Registry - Manages multiple services
@@ -243,6 +243,7 @@ const server = new MultiServiceServer();
 // Register services
 server.registerService(new TimeService());
 server.registerService(new CalculatorService());
+server.registerService(new PostgreSQLService());
 // Add more services here...
 
 // Start server
