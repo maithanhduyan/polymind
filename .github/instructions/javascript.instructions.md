@@ -1,5 +1,5 @@
 ---
-applyTo: '**/*.{js,html,css}'
+applyTo: '**/*.{ts,js,html,css}'
 ---
 
 # Frontend Development Standards
@@ -168,3 +168,11 @@ gitGraph
     commit id: "Release Merged Back"
 
 ```
+
+## Graceful Fallback Design
+
+### 🛡️ Nguyên tắc Thiết kế
+1. **Fail-Safe Defaults**: Luôn có giá trị/phương án mặc định an toàn
+2. **Degraded Functionality**: Duy trì chức năng cốt lõi khi tính năng phụ lỗi
+3. **Automatic Recovery**: Tự phục hồi khi nguyên nhân lỗi biến mất
+4. **Clear User Feedback**: Thông báo rõ ràng cho user khi xảy ra fallback

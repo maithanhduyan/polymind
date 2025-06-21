@@ -1,98 +1,141 @@
-# System Time MCP Server
+# Multi-Service MCP Server
 
-Một MCP (Model Context Protocol) server đơn giản để lấy thời gian hệ thống với nhiều định dạng khác nhau.
+A comprehensive HTTP server providing multiple services including time management and PostgreSQL database operations.
 
-## Tính năng
+## Services
 
-- Lấy thời gian hiện tại theo nhiều định dạng (ISO, locale, Unix timestamp, UTC, detailed)
-- Hỗ trợ múi giờ khác nhau
-- Cung cấp thông tin chi tiết về thời gian (ngày trong tuần, tháng, năm, v.v.)
+### 🕒 Time Service
+- Get current system time in various formats
+- Retrieve detailed time information
+- Support for multiple timezones
 
-## Cài đặt và Sử dụng
+### 🗄️ PostgreSQL Service  
+- Database connection management
+- Execute SQL queries
+- Browse tables and schemas
+- Data retrieval with pagination
 
-### 1. Build MCP Server
+## Quick Start
 
-```powershell
-# Chạy script build
-.\build.ps1
-```
-
-Hoặc build thủ công:
-
-```powershell
-cd mcp-server
+### 1. Install Dependencies
+```bash
 npm install
+```
+
+### 2. Environment Setup
+Copy `.env.example` to `.env` and configure your settings:
+```bash
+cp .env.example .env
+```
+
+### 3. Build and Start
+```bash
 npm run build
+npm start
 ```
 
-### 2. Cấu hình VS Code
+## API Endpoints
 
-MCP server đã được cấu hình trong `.vscode/settings.json`:
+### Service Discovery
+- `GET /` - List all available services and endpoints
+- `GET /health` - Global health check for all services
 
-```json
-{
-  "chat.mcp.enabled": true,
-  "chat.mcp.servers": {
-    "system-time": {
-      "command": "node",
-      "args": ["c:\\Users\\tiach\\Downloads\\polymind\\mcp-server\\dist\\index.js"],
-      "description": "System time MCP server - provides current system time in various formats"
-    }
-  }
-}
+### Time Service
+- `GET /time` - Get current time
+  - Query params: `format` (iso, locale, unix, utc, detailed), `timezone`
+- `GET /time/info` - Get detailed time information
+  - Query params: `include_timezone` (boolean)
+
+### PostgreSQL Service
+- `GET /postgres/status` - Database connection status
+- `GET /postgres/tables` - List all tables
+  - Query params: `schema` (default: public)
+- `GET /postgres/table/{tableName}/schema` - Get table schema
+- `GET /postgres/table/{tableName}/data` - Get table data
+  - Query params: `limit` (default: 100), `offset` (default: 0)
+- `POST /postgres/query` - Execute SQL query
+  - Body: `{ "query": "SELECT * FROM users", "params": [] }`
+
+## Examples
+
+### Time Service
+```bash
+# Get current time in detailed format
+curl "http://localhost:3000/time?format=detailed&timezone=Asia/Ho_Chi_Minh"
+
+# Get time information
+curl "http://localhost:3000/time/info"
 ```
 
-### 3. Sử dụng trong GitHub Copilot Chat
+### PostgreSQL Service
+```bash
+# Get database status
+curl "http://localhost:3000/postgres/status"
 
-Sau khi build và cấu hình, bạn có thể sử dụng các tools sau trong GitHub Copilot Chat:
+# List tables
+curl "http://localhost:3000/postgres/tables"
 
-#### `get_current_time`
-Lấy thời gian hiện tại với định dạng chỉ định:
+# Get table schema
+curl "http://localhost:3000/postgres/table/users/schema"
 
-- **format**: `iso`, `locale`, `unix`, `utc`, `detailed`
-- **timezone**: Múi giờ (ví dụ: 'Asia/Ho_Chi_Minh', 'UTC')
-
-#### `get_time_info`
-Lấy thông tin chi tiết về thời gian hiện tại:
-
-- **include_timezone**: Có bao gồm thông tin múi giờ không (mặc định: true)
-
-## Ví dụ sử dụng
-
-Trong GitHub Copilot Chat, bạn có thể hỏi:
-
-- "Thời gian hiện tại là gì?"
-- "Cho tôi thời gian theo múi giờ Việt Nam"
-- "Unix timestamp hiện tại là bao nhiêu?"
-- "Thông tin chi tiết về thời gian hiện tại"
-
-## Cấu trúc dự án
-
-```
-mcp-server/
-├── src/
-│   └── index.ts          # MCP server implementation
-├── dist/                 # Compiled JavaScript
-├── package.json          # Node.js dependencies
-├── tsconfig.json         # TypeScript configuration
-├── build.ps1            # Build script
-└── README.md            # Documentation
+# Execute custom query
+curl -X POST "http://localhost:3000/postgres/query" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "SELECT COUNT(*) FROM users WHERE active = $1", "params": [true]}'
 ```
 
-## Troubleshooting
+## Configuration
 
-1. **Lỗi build**: Đảm bảo Node.js và npm đã được cài đặt
-2. **MCP server không hoạt động**: Kiểm tra đường dẫn trong settings.json
-3. **Lỗi permission**: Chạy PowerShell với quyền Administrator nếu cần
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PORT` | Server port | 3000 |
+| `HOST` | Server host | 0.0.0.0 |
+| `DB_HOST` | PostgreSQL host | localhost |
+| `DB_PORT` | PostgreSQL port | 5432 |
+| `DB_NAME` | Database name | mcp_server |
+| `DB_USER` | Database user | postgres |
+| `DB_PASSWORD` | Database password | password |
+| `DB_SSL` | Enable SSL | false |
 
 ## Development
 
-Để phát triển thêm:
-
-```powershell
-# Watch mode
-npm run dev
-
-# Test server
-node dist/index.js
+### Build
+```bash
+npm run build
 ```
+
+### Watch Mode
+```bash
+npm run dev
+```
+
+## Architecture
+
+The server uses a service registry pattern where each service:
+- Extends `BaseService` abstract class
+- Implements initialization, cleanup, and health checks
+- Provides endpoint definitions
+- Handles service-specific routing
+
+Services are automatically registered and managed by the `ServiceRegistry` class.
+
+## Error Handling
+
+All responses follow a consistent format:
+```json
+{
+  "success": boolean,
+  "data": any,
+  "error": string,
+  "timestamp": string
+}
+```
+
+## Adding New Services
+
+1. Create a new service class extending `BaseService`
+2. Implement required methods: `getEndpoints()`, `initialize()`, `cleanup()`, `healthCheck()`
+3. Add service registration in `main()` function
+4. Add request handler in `handleServiceRequest()` function

@@ -72,12 +72,12 @@
     "editor.formatOnSave": false,
     "prettier.enable": false,
     "[javascript]": {
-        "editor.formatOnSave": false,
+        "editor.formatOnSave": true,
         "editor.defaultFormatter": null
     },
     "[typescript]": {
-        "editor.formatOnSave": false,
-        "editor.defaultFormatter": null
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter":"vscode.typescript-language-features"
     },
     "[html]": {
         "editor.formatOnSave": false,
