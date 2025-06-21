@@ -52,8 +52,30 @@
         "showReuseMessage": false,
         "clear": true
       },
-      "problemMatcher": [],
-      "detail": "Safely kill all Python processes with proper error handling",
+      "problemMatcher": [],      "detail": "Safely kill all Python processes with proper error handling",
+      "runOptions": {
+        "runOn": "default"
+      }
+    },
+    {
+      "label": "Build MCP Server",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "build"],
+      "group": "build",
+      "options": {
+        "cwd": "${workspaceFolder}/mcp-server"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": ["$tsc"],
+      "detail": "Build System Time MCP Server from TypeScript",
       "runOptions": {
         "runOn": "default"
       }

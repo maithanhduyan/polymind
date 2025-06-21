@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "system-time": {
+      "command": "node",
+      "args": ["mcp-server/dist/http-server.js"],
+      "cwd": "${workspaceFolder}"
+    }
+  }
+}
