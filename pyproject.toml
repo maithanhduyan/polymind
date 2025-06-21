@@ -11,9 +11,10 @@ dependencies = [
     "httpx",
     "pydantic>=2.0",
     "python-dotenv",
-    "typer",         # CLI optional
-    "rich",          # Logging đẹp
-    "psutil",        # Process management
+    "typer",            # CLI optional
+    "rich",             # Logging đẹp
+    "psutil",           # Process management
+    "chromadb"          # Vector database
 ]
 
 [project.scripts]
