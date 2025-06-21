@@ -17,7 +17,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-
   ollama:
     container_name: ollama
     image: ollama/ollama:latest
@@ -35,13 +34,14 @@ services:
       timeout: 10s
       retries: 5
       start_period: 120s
+      
   chromadb:
     container_name: chromadb  
     image: chromadb/chroma:latest
     ports:
       - "8000:8000"
     volumes:
-      - ./chromadb:/chroma/chroma
+      - ./chromadb:/data
     environment:
       - CHROMA_SERVER_HOST=0.0.0.0
       - CHROMA_SERVER_HTTP_PORT=8000
