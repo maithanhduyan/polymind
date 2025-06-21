@@ -9,3 +9,5 @@ export { Service } from './base-service.js';
 export { TimeService } from './time-service.js';
 export { CalculatorService } from './calculator-service.js';
 export { PostgreSQLService } from './postgres-service.js';
+export { EmbeddingService } from './embedding-service.js';
+export { ChromaDBService } from './chromadb-service.js';

@@ -15,7 +15,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { URL } from 'url';
-import { Service, TimeService, CalculatorService, PostgreSQLService } from './services/index.js';
+import { Service, TimeService, CalculatorService, PostgreSQLService, EmbeddingService, ChromaDBService } from './services/index.js';
 
 /**
  * Service Registry - Manages multiple services
@@ -241,9 +241,12 @@ const port = portArgIndex !== -1 ? parseInt(args[portArgIndex + 1]) : 3000;
 const server = new MultiServiceServer();
 
 // Register services
+const embeddingService = new EmbeddingService();
 server.registerService(new TimeService());
 server.registerService(new CalculatorService());
 server.registerService(new PostgreSQLService());
+server.registerService(embeddingService);
+server.registerService(new ChromaDBService(embeddingService));
 // Add more services here...
 
 // Start server
