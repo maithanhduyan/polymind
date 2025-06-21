@@ -1,11 +1,11 @@
 {
   "servers": {
-    "system-time": {
+    "tools-mcp": {
       "command": "node",
       "args": [
         "mcp-server/dist/server.js"
       ],
       "cwd": "${workspaceFolder}"
-    }
+    },
   }
 }

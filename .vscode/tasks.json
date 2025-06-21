@@ -5,7 +5,9 @@
       "label": "Clean Test Files",
       "type": "shell",
       "command": "python",
-      "args": ["${workspaceFolder}\\.tools\\clean_test_file_in_workspace.py"],
+      "args": [
+        "${workspaceFolder}\\.tools\\clean_test_file_in_workspace.py"
+      ],
       "group": "build",
       "presentation": {
         "echo": true,
@@ -18,7 +20,12 @@
       "options": {
         "shell": {
           "executable": "powershell.exe",
-          "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command"]
+          "args": [
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-Command"
+          ]
         },
         "env": {
           "TERM": "xterm-256color",
@@ -52,7 +59,8 @@
         "showReuseMessage": false,
         "clear": true
       },
-      "problemMatcher": [],      "detail": "Safely kill all Python processes with proper error handling",
+      "problemMatcher": [],
+      "detail": "Safely kill all Python processes with proper error handling",
       "runOptions": {
         "runOn": "default"
       }
@@ -61,7 +69,10 @@
       "label": "Build MCP Server",
       "type": "shell",
       "command": "npm",
-      "args": ["run", "build"],
+      "args": [
+        "run",
+        "build"
+      ],
       "group": "build",
       "options": {
         "cwd": "${workspaceFolder}/mcp-server"
@@ -74,8 +85,10 @@
         "showReuseMessage": false,
         "clear": true
       },
-      "problemMatcher": ["$tsc"],
-      "detail": "Build System Time MCP Server from TypeScript",
+      "problemMatcher": [
+        "$tsc"
+      ],
+      "detail": "Build MCP server",
       "runOptions": {
         "runOn": "default"
       }
