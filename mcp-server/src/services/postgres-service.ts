@@ -18,31 +18,25 @@ export class PostgreSQLService implements Service {
     readonly version = '1.0.0';
     readonly description = 'Provides PostgreSQL database connection and SQL query tools';
 
-    private client: Client;
-    private isConnected = false;
-
-    constructor() {
-        this.client = new Client({
-            host: 'localhost',
-            port: 5432,
-            database: 'postgres',
-            user: 'postgres',
-            password: 'postgres#2025',
-        });
-    }
+    private config = {
+        host: 'localhost',
+        port: 5432,
+        database: 'postgres',
+        user: 'postgres',
+        password: 'postgres#2025',
+    };
 
     /**
-     * Kết nối đến PostgreSQL server
-     * @returns Promise<void>
+     * Tạo connection mới cho mỗi operation
+     * @returns Promise<Client>
      */
-    private async ensureConnection(): Promise<void> {
-        if (!this.isConnected) {
-            try {
-                await this.client.connect();
-                this.isConnected = true;
-            } catch (error) {
-                throw new Error(`Failed to connect to PostgreSQL: ${error instanceof Error ? error.message : 'Unknown error'}`);
-            }
+    private async createConnection(): Promise<Client> {
+        const client = new Client(this.config);
+        try {
+            await client.connect();
+            return client;
+        } catch (error) {
+            throw new Error(`Failed to connect to PostgreSQL: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
@@ -120,17 +114,13 @@ export class PostgreSQLService implements Service {
                 },
             ] satisfies Tool[],
         };
-    }
-
-    /**
+    }    /**
      * Gọi một tool cụ thể trong PostgreSQL Service
      * @param name Tên của tool
      * @param args Tham số cho tool
      * @returns Kết quả truy vấn
      */
     async callTool(name: string, args: any) {
-        await this.ensureConnection();
-
         switch (name) {
             case 'list_databases':
                 return this.listDatabases();
@@ -145,15 +135,14 @@ export class PostgreSQLService implements Service {
             default:
                 throw new Error(`Unknown tool: ${name}`);
         }
-    }
-
-    /**
+    }    /**
      * Liệt kê tất cả databases trong PostgreSQL server
      * @returns Danh sách databases
      */
     private async listDatabases() {
+        const client = await this.createConnection();
         try {
-            const result = await this.client.query(`
+            const result = await client.query(`
         SELECT datname as database_name, 
                pg_size_pretty(pg_database_size(datname)) as size,
                datallowconn as allow_connections
@@ -175,6 +164,8 @@ export class PostgreSQLService implements Service {
             };
         } catch (error) {
             throw new Error(`Failed to list databases: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            await client.end();
         }
     }
 
@@ -184,8 +175,9 @@ export class PostgreSQLService implements Service {
      * @returns Danh sách tables
      */
     private async listTables(args: any) {
+        const client = await this.createConnection();
         try {
-            const result = await this.client.query(`
+            const result = await client.query(`
         SELECT schemaname, tablename, tableowner 
         FROM pg_tables 
         WHERE schemaname NOT IN ('information_schema', 'pg_catalog')
@@ -205,10 +197,10 @@ export class PostgreSQLService implements Service {
             };
         } catch (error) {
             throw new Error(`Failed to list tables: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            await client.end();
         }
-    }
-
-    /**
+    }    /**
      * Thực thi SQL query
      * @param args Object chứa query và database (optional)
      * @returns Kết quả query
@@ -220,8 +212,9 @@ export class PostgreSQLService implements Service {
             throw new Error('Query is required');
         }
 
+        const client = await this.createConnection();
         try {
-            const result = await this.client.query(query);
+            const result = await client.query(query);
 
             if (result.command === 'SELECT') {
                 return {
@@ -240,6 +233,8 @@ export class PostgreSQLService implements Service {
             }
         } catch (error) {
             throw new Error(`Failed to execute query: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            await client.end();
         }
     }
 
@@ -255,8 +250,9 @@ export class PostgreSQLService implements Service {
             throw new Error('Table name is required');
         }
 
+        const client = await this.createConnection();
         try {
-            const result = await this.client.query(`
+            const result = await client.query(`
         SELECT 
           column_name,
           data_type,
@@ -289,6 +285,8 @@ export class PostgreSQLService implements Service {
             };
         } catch (error) {
             throw new Error(`Failed to get table schema: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            await client.end();
         }
     }
 
@@ -297,9 +295,10 @@ export class PostgreSQLService implements Service {
      * @returns Server information
      */
     private async getServerInfo() {
+        const client = await this.createConnection();
         try {
-            const versionResult = await this.client.query('SELECT version();');
-            const settingsResult = await this.client.query(`
+            const versionResult = await client.query('SELECT version();');
+            const settingsResult = await client.query(`
         SELECT name, setting, unit, short_desc
         FROM pg_settings 
         WHERE name IN ('server_version', 'port', 'max_connections', 'shared_buffers', 'data_directory')
@@ -312,20 +311,11 @@ export class PostgreSQLService implements Service {
                     text: `PostgreSQL Server Information:\n\n${versionResult.rows[0].version}\n\nKey Settings:\n${settingsResult.rows.map(setting =>
                         `- ${setting.name}: ${setting.setting}${setting.unit || ''} (${setting.short_desc})`
                     ).join('\n')}`
-                }]
-            };
+                }]            };
         } catch (error) {
             throw new Error(`Failed to get server info: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-    }
-
-    /**
-     * Đóng kết nối database khi service được destroy
-     */
-    async destroy() {
-        if (this.isConnected) {
-            await this.client.end();
-            this.isConnected = false;
+        } finally {
+            await client.end();
         }
     }
 }
