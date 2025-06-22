@@ -22,16 +22,18 @@ export class PostgreSQLService implements Service {
         host: 'localhost',
         port: 5432,
         database: 'postgres',
-        user: 'postgres',
-        password: 'postgres#2025',
+        user: 'odoo',
+        password: 'odoo#2025',
     };
 
     /**
-     * Tạo connection mới cho mỗi operation
+     * Tạo connection mới cho mỗi operation, cho phép chọn database động
+     * @param database Tên database (tùy chọn)
      * @returns Promise<Client>
      */
-    private async createConnection(): Promise<Client> {
-        const client = new Client(this.config);
+    private async createConnection(database?: string): Promise<Client> {
+        const config = { ...this.config, database: database ?? this.config.database };
+        const client = new Client(config);
         try {
             await client.connect();
             return client;
@@ -175,7 +177,8 @@ export class PostgreSQLService implements Service {
      * @returns Danh sách tables
      */
     private async listTables(args: any) {
-        const client = await this.createConnection();
+        const dbName = args?.database;
+        const client = await this.createConnection(dbName);
         try {
             const result = await client.query(`
         SELECT schemaname, tablename, tableowner 
@@ -206,13 +209,13 @@ export class PostgreSQLService implements Service {
      * @returns Kết quả query
      */
     private async executeQuery(args: any) {
-        const { query } = args;
+        const { query, database } = args;
 
         if (!query) {
             throw new Error('Query is required');
         }
 
-        const client = await this.createConnection();
+        const client = await this.createConnection(database);
         try {
             const result = await client.query(query);
 
@@ -244,13 +247,13 @@ export class PostgreSQLService implements Service {
      * @returns Schema information
      */
     private async getTableSchema(args: any) {
-        const { table_name } = args;
+        const { table_name, database } = args;
 
         if (!table_name) {
             throw new Error('Table name is required');
         }
 
-        const client = await this.createConnection();
+        const client = await this.createConnection(database);
         try {
             const result = await client.query(`
         SELECT 

@@ -1,6 +1,6 @@
 {
   "servers": {
-    "tools-mcp": {
+    "mcp-server": {
       "command": "node",
       "args": [
         "mcp-server/dist/server.js"
