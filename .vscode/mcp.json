@@ -1,6 +1,6 @@
 {
   "servers": {
-    "mcp-server": {
+    "polymind-tools": {
       "command": "node",
       "args": [
         "mcp-server/dist/server.js"

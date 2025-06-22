@@ -1,0 +1,36 @@
+services:
+  odoo:
+    container_name: odoo_16
+    image: odoo:16.0
+    volumes:
+      - ./addons:/mnt/extra-addons # contain odoo dev modules
+      - ./conf:/etc/odoo # contain config and log
+      - ./web-data:/var/lib/odoo # contain odoo web data
+      - ./log:/var/log/odoo # contain odoo log data
+    ports:
+      - "8016:8069" # web
+      - "8272:8072" # longpolling
+    networks:
+      - mcp_net
+    restart: always
+
+networks:
+  mcp_net:
+    external: true
+
+
+# docker restart odoo_16
+# docker compose -f mcp-server/odoo/odoo_v16/docker-compose.yml up -d 
+# docker compose -f mcp-server/odoo/odoo_v16/docker-compose.yml restart 
+# docker compose -f mcp-server/odoo/odoo_v16/docker-compose.yml stop
+
+# mkdir web-data
+# On Linux, set permissions for web-data directory:
+# sudo chown -R 1000:1000 ./web-data
+# sudo chmod -R 755 ./web-data
+
+# On Windows, ensure the user running Docker has full access to the web-data folder.
+# Trên Windows, dùng PowerShell để cấp quyền truy cập đầy đủ cho thư mục web-data:
+# Mở PowerShell với quyền Administrator và chạy lệnh sau:
+# icacls ".\web-data" /grant "${env:UserName}:(OI)(CI)F" /T
+# (OI)(CI) cho phép kế thừa quyền cho tất cả file và thư mục con, F là Full control.
