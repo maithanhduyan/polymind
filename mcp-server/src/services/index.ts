@@ -12,3 +12,5 @@ export { PostgreSQLService } from './postgres-service.js';
 export { EmbeddingService } from './embedding-service.js';
 export { ChromaDBService } from './chromadb-service.js';
 export { DockerService } from './docker-service.js';
+export { AiChunkService } from './ai-chunk-service.js';
+export { SequentialThinkingService } from './sequential-thinking-service.js';

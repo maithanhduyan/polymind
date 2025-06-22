@@ -15,7 +15,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { URL } from 'url';
-import { Service, TimeService, CalculatorService, PostgreSQLService, EmbeddingService, ChromaDBService, DockerService } from './services/index.js';
+import { Service, TimeService, CalculatorService, PostgreSQLService, EmbeddingService, ChromaDBService, DockerService, AiChunkService, SequentialThinkingService } from './services/index.js';
 
 /**
  * Service Registry - Manages multiple services
@@ -248,6 +248,8 @@ server.registerService(new PostgreSQLService());
 server.registerService(embeddingService);
 server.registerService(new ChromaDBService(embeddingService));
 server.registerService(new DockerService());
+server.registerService(new AiChunkService());
+server.registerService(new SequentialThinkingService());
 // Add more services here...
 
 // Start server
