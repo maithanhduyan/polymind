@@ -7,7 +7,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "http": "node dist/server.js --transport http --port 3000"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.5.0",

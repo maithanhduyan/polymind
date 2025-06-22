@@ -15,7 +15,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { URL } from 'url';
-import { Service, TimeService, CalculatorService, PostgreSQLService, EmbeddingService, ChromaDBService } from './services/index.js';
+import { Service, TimeService, CalculatorService, PostgreSQLService, EmbeddingService, ChromaDBService, DockerService } from './services/index.js';
 
 /**
  * Service Registry - Manages multiple services
@@ -233,7 +233,7 @@ class MultiServiceServer {
 
 // Parse command-line arguments
 const args = process.argv.slice(2);
-const httpMode = args.includes('--http');
+const httpMode = args.includes('--http') || (args.includes('--transport') && args[args.indexOf('--transport') + 1] === 'http');
 const portArgIndex = args.indexOf('--port');
 const port = portArgIndex !== -1 ? parseInt(args[portArgIndex + 1]) : 3000;
 
@@ -247,6 +247,7 @@ server.registerService(new CalculatorService());
 server.registerService(new PostgreSQLService());
 server.registerService(embeddingService);
 server.registerService(new ChromaDBService(embeddingService));
+server.registerService(new DockerService());
 // Add more services here...
 
 // Start server
