@@ -16,7 +16,7 @@ import { z } from 'zod';
 
 // Optimized import for __dirname
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const defaultMemoryPath = path.join(__dirname, 'memory.json');
+const defaultMemoryPath = path.join(__dirname, '../memory.json');
 
 const MEMORY_FILE_PATH = process.env.MEMORY_FILE_PATH
     ? path.isAbsolute(process.env.MEMORY_FILE_PATH)
@@ -205,7 +205,8 @@ export class MemoryService implements Service {
                         },
                         required: ["entityNames"],
                     },
-        {
+                },
+                {
                     name: "delete_observations",
                     description: "Delete specific observations from entities in the knowledge graph",
                     inputSchema: {
@@ -285,7 +286,8 @@ export class MemoryService implements Service {
                         },
                         required: ["names"],
                     },
-      ],
+                },
+            ],
         };
     }
 

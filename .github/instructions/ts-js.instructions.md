@@ -21,6 +21,8 @@ applyTo: '**/*.{ts,js,html,css}'
 
 - Check #get_errors before `run | build `
 - Add JSDoc comments for functions (English/Vietnamese)
+- Luôn Luôn Tự kiểm tra và tự động sửa lỗi nếu có. Cho đến khi hết lỗi. Test luôn pass đúng logic 
+
 
 ## HTML Standards
 - Use semantic HTML5 elements
