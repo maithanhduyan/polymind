@@ -2,3 +2,7 @@ node_modules/
 postgres/data/
 chromadb/
 ollama/data/
+
+
+web-data/
+log/
