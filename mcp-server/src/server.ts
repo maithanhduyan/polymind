@@ -152,6 +152,82 @@ class MultiServiceServer {
           return;
         }
 
+        // MCP endpoint - JSON-RPC 2.0 over HTTP with SSE support
+        if (pathname === '/mcp') {
+          if (req.method === 'GET') {
+            // SSE endpoint for MCP clients
+            res.writeHead(200, {
+              'Content-Type': 'text/event-stream',
+              'Cache-Control': 'no-cache',
+              'Connection': 'keep-alive',
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Headers': 'Content-Type, Mcp-Session-Id',
+              'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+            });
+
+            // Send initial connection established event
+            res.write('data: {"jsonrpc":"2.0","method":"initialized","params":{}}\n\n');
+
+            // Keep connection alive with periodic ping
+            const pingInterval = setInterval(() => {
+              res.write('data: {"jsonrpc":"2.0","method":"ping","params":{}}\n\n');
+            }, 30000);
+
+            // Handle client disconnect
+            req.on('close', () => {
+              clearInterval(pingInterval);
+            });
+
+            return;
+          }
+
+          if (req.method === 'POST') {
+            // Handle JSON-RPC 2.0 requests
+            let body = '';
+            for await (const chunk of req) {
+              body += chunk;
+            }
+
+            try {
+              const rpcRequest = JSON.parse(body);
+              const rpcResponse = await this.handleMcpJsonRpc(rpcRequest);
+
+              res.writeHead(200, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+              });
+              res.end(JSON.stringify(rpcResponse));
+            } catch (error) {
+              const errorResponse = {
+                jsonrpc: '2.0',
+                error: {
+                  code: -32700,
+                  message: 'Parse error',
+                  data: error instanceof Error ? error.message : 'Unknown error'
+                },
+                id: null
+              };
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify(errorResponse));
+            }
+            return;
+          }
+
+          if (req.method === 'OPTIONS') {
+            res.writeHead(204, {
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Headers': 'Content-Type, Mcp-Session-Id',
+              'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+            });
+            res.end();
+            return;
+          }
+
+          res.writeHead(405);
+          res.end('Method Not Allowed');
+          return;
+        }
+
         if (req.method !== 'POST') {
           res.writeHead(405);
           res.end('Method Not Allowed');
@@ -227,7 +303,101 @@ class MultiServiceServer {
       console.error('  POST /call-tool         - Execute a namespaced tool (e.g., "time.get_current_time")');
       console.error('  POST /service/:ns/list-tools - List tools for a specific service');
       console.error('  POST /service/:ns/call-tool  - Execute a tool in a specific service');
+      console.error('  GET  /mcp               - MCP endpoint for VSCode integration');
     });
+  }
+
+  /**
+   * Handle MCP JSON-RPC 2.0 requests
+   * @param rpcRequest JSON-RPC 2.0 request object
+   */
+  async handleMcpJsonRpc(rpcRequest: any): Promise<any> {
+    // Basic JSON-RPC 2.0 validation
+    if (!rpcRequest || rpcRequest.jsonrpc !== '2.0' || typeof rpcRequest.method !== 'string') {
+      return {
+        jsonrpc: '2.0',
+        error: { code: -32600, message: 'Invalid Request' },
+        id: rpcRequest?.id ?? null
+      };
+    }
+    const { method, params, id } = rpcRequest;
+    try {
+      if (method === 'initialize') {
+        return await this.handleMcpInitialize(params, id);
+      }
+      if (method === 'tools.list' || method === 'tools/list') {
+        const tools = await this.serviceRegistry.listAllTools();
+        return { jsonrpc: '2.0', result: tools, id };
+      }
+      if (method === 'tools.call' || method === 'tools/call') {
+        if (!params?.name || params.arguments === undefined) {
+          return {
+            jsonrpc: '2.0',
+            error: { code: -32602, message: 'Invalid params' },
+            id
+          };
+        }
+        try {
+          const result = await this.serviceRegistry.callTool(params.name, params.arguments);
+          return { jsonrpc: '2.0', result, id };
+        } catch (err: any) {
+          return {
+            jsonrpc: '2.0',
+            error: { code: -32603, message: err?.message || 'Internal error' },
+            id
+          };
+        }
+      }
+      if (method === 'ping') {
+        return { jsonrpc: '2.0', result: 'pong', id };
+      }
+      // Unknown method
+      return {
+        jsonrpc: '2.0',
+        error: { code: -32601, message: 'Method not found' },
+        id
+      };
+    } catch (error: any) {
+      return {
+        jsonrpc: '2.0',
+        error: { code: -32603, message: error?.message || 'Internal error' },
+        id
+      };
+    }
+  }
+
+  /**
+   * Handle MCP initialize handshake
+   * @param params Params from initialize request
+   * @param id JSON-RPC request id
+   */
+  async handleMcpInitialize(params: any, id: any): Promise<any> {
+    // You can extend this with more protocol negotiation if needed
+    return {
+      jsonrpc: '2.0',
+      result: {
+        name: 'multi-service-server',
+        version: '1.0.0',
+        description: 'MCP Multi-Service Server for VSCode integration',
+        capabilities: {
+          tools: {},
+          logging: true,
+          resources: true,
+          prompts: true
+        },
+        endpoints: [
+          '/health',
+          '/services',
+          '/list-tools',
+          '/call-tool',
+          '/service/:ns/list-tools',
+          '/service/:ns/call-tool',
+          '/mcp',
+          '/initialize'
+        ]
+      },
+      id
+    };
   }
 }
 

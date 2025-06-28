@@ -11,6 +11,9 @@ services:
     ports:
       - "8069:8069" # web
       - "8172:8072" # web
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - mcp_net
     restart: always

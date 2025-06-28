@@ -10,6 +10,9 @@ services:
     ports:
       - "8017:8069" # web
       - "8372:8072" # longpolling
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - mcp_net
     restart: always

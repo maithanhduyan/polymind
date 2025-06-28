@@ -1,11 +1,15 @@
 {
   "servers": {
-    "polymind-tools": {
-      "command": "node",
-      "args": [
-        "mcp-server/dist/server.js"
-      ],
-      "cwd": "${workspaceFolder}"
-    },
+    // "polymind-tools": {
+    //   "command": "node",
+    //   "args": [
+    //     "mcp-server/dist/server.js"
+    //   ],
+    //   "cwd": "${workspaceFolder}"
+    // },
+    "polymind-http": {
+      "url": "http://localhost:3000/mcp",
+      "headers": {}
+    }
   }
 }

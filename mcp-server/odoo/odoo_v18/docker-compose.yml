@@ -11,6 +11,9 @@ services:
     ports:
       - "8018:8069" # web
       - "8472:8072" # longpolling
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - mcp_net
     restart: always
